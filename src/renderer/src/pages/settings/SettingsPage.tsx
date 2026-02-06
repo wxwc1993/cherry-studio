@@ -5,6 +5,7 @@ import ModelSettings from '@renderer/pages/settings/ModelSettings/ModelSettings'
 import { Divider as AntDivider } from 'antd'
 import {
   Brain,
+  Building2,
   Cloud,
   Command,
   FileCode,
@@ -38,6 +39,7 @@ import SelectionAssistantSettings from './SelectionAssistantSettings/SelectionAs
 import ShortcutSettings from './ShortcutSettings'
 import { ApiServerSettings } from './ToolSettings/ApiServerSettings'
 import WebSearchSettings from './WebSearchSettings'
+import EnterprisePanel from './EnterprisePanel'
 
 const SettingsPage: FC = () => {
   const { pathname } = useLocation()
@@ -146,6 +148,13 @@ const SettingsPage: FC = () => {
               {t('settings.about.label')}
             </MenuItem>
           </MenuItemLink>
+          <Divider />
+          <MenuItemLink to="/settings/enterprise">
+            <MenuItem className={isRoute('/settings/enterprise')}>
+              <Building2 size={18} />
+              {t('settings.enterprise.title')}
+            </MenuItem>
+          </MenuItemLink>
         </SettingMenus>
         <SettingContent>
           <Routes>
@@ -164,6 +173,7 @@ const SettingsPage: FC = () => {
             <Route path="selectionAssistant" element={<SelectionAssistantSettings />} />
             <Route path="data" element={<DataSettings />} />
             <Route path="about" element={<AboutSettings />} />
+            <Route path="enterprise" element={<EnterprisePanel />} />
           </Routes>
         </SettingContent>
       </ContentContainer>

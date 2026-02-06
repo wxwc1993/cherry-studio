@@ -20,6 +20,8 @@ import type {
 
 interface ImportMetaEnv {
   VITE_RENDERER_INTEGRATED_MODEL: string
+  readonly VITE_ENTERPRISE_SERVER_URL?: string
+  readonly VITE_FEISHU_APP_ID?: string
 }
 
 interface ImportMeta {

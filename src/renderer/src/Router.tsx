@@ -5,6 +5,8 @@ import { useMemo } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
 
 import Sidebar from './components/app/Sidebar'
+import AuthGuard from './components/auth/AuthGuard'
+import EnterpriseMinAppGuard from './components/auth/EnterpriseMinAppGuard'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import TabsContainer from './components/Tab/TabContainer'
 import NavigationHandler from './handler/NavigationHandler'
@@ -14,6 +16,7 @@ import FilesPage from './pages/files/FilesPage'
 import HomePage from './pages/home/HomePage'
 import KnowledgePage from './pages/knowledge/KnowledgePage'
 import LaunchpadPage from './pages/launchpad/LaunchpadPage'
+import EnterpriseLoginPage from './pages/login/EnterpriseLoginPage'
 import MinAppPage from './pages/minapps/MinAppPage'
 import MinAppsPage from './pages/minapps/MinAppsPage'
 import NotesPage from './pages/notes/NotesPage'
@@ -29,18 +32,39 @@ const Router: FC = () => {
     return (
       <ErrorBoundary>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/store" element={<AssistantPresetsPage />} />
-          <Route path="/paintings/*" element={<PaintingsRoutePage />} />
-          <Route path="/translate" element={<TranslatePage />} />
-          <Route path="/files" element={<FilesPage />} />
-          <Route path="/notes" element={<NotesPage />} />
-          <Route path="/knowledge" element={<KnowledgePage />} />
-          <Route path="/apps/:appId" element={<MinAppPage />} />
-          <Route path="/apps" element={<MinAppsPage />} />
-          <Route path="/code" element={<CodeToolsPage />} />
-          <Route path="/settings/*" element={<SettingsPage />} />
-          <Route path="/launchpad" element={<LaunchpadPage />} />
+          {/* 登录页 - 无需认证 */}
+          <Route path="/login/enterprise" element={<EnterpriseLoginPage />} />
+
+          {/* 所有其他路由需要认证 */}
+          <Route element={<AuthGuard />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/store" element={<AssistantPresetsPage />} />
+            <Route path="/paintings/*" element={<PaintingsRoutePage />} />
+            <Route path="/translate" element={<TranslatePage />} />
+            <Route path="/files" element={<FilesPage />} />
+            <Route path="/notes" element={<NotesPage />} />
+            <Route path="/knowledge" element={<KnowledgePage />} />
+            {/* 小程序路由 - 企业版禁止访问 */}
+            <Route
+              path="/apps/:appId"
+              element={
+                <EnterpriseMinAppGuard>
+                  <MinAppPage />
+                </EnterpriseMinAppGuard>
+              }
+            />
+            <Route
+              path="/apps"
+              element={
+                <EnterpriseMinAppGuard>
+                  <MinAppsPage />
+                </EnterpriseMinAppGuard>
+              }
+            />
+            <Route path="/code" element={<CodeToolsPage />} />
+            <Route path="/settings/*" element={<SettingsPage />} />
+            <Route path="/launchpad" element={<LaunchpadPage />} />
+          </Route>
         </Routes>
       </ErrorBoundary>
     )

@@ -1,0 +1,68 @@
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy workspace files
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY packages/enterprise-shared/package.json ./packages/enterprise-shared/
+COPY packages/server/package.json ./packages/server/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY packages/enterprise-shared ./packages/enterprise-shared
+COPY packages/server ./packages/server
+
+# Build shared package first
+WORKDIR /app/packages/enterprise-shared
+RUN pnpm build
+
+# Build server
+WORKDIR /app/packages/server
+RUN pnpm build
+
+# Production stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 cherry
+
+# Copy built files
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/packages/enterprise-shared/package.json ./packages/enterprise-shared/
+COPY --from=builder /app/packages/enterprise-shared/dist ./packages/enterprise-shared/dist
+COPY --from=builder /app/packages/server/package.json ./packages/server/
+COPY --from=builder /app/packages/server/dist ./packages/server/dist
+COPY --from=builder /app/packages/server/drizzle ./packages/server/drizzle
+
+# Install production dependencies only
+RUN pnpm install --prod --frozen-lockfile
+
+# Set ownership
+RUN chown -R cherry:nodejs /app
+
+USER cherry
+
+WORKDIR /app/packages/server
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# Start server
+CMD ["node", "dist/index.js"]

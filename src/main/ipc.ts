@@ -85,6 +85,7 @@ import { themeService } from './services/ThemeService'
 import VertexAIService from './services/VertexAIService'
 import { setOpenLinkExternal } from './services/WebviewService'
 import { windowService } from './services/WindowService'
+import { getEnterpriseConfig } from './services/EnterpriseConfigService'
 import { calculateDirectorySize, getResourcePath } from './utils'
 import { decrypt, encrypt } from './utils/aes'
 import {
@@ -1145,5 +1146,10 @@ export async function registerIpc(mainWindow: BrowserWindow, app: Electron.App) 
 
   ipcMain.handle(IpcChannel.APP_CrashRenderProcess, () => {
     mainWindow.webContents.forcefullyCrashRenderer()
+  })
+
+  // Enterprise Config
+  ipcMain.handle(IpcChannel.Enterprise_GetConfig, () => {
+    return getEnterpriseConfig()
   })
 }

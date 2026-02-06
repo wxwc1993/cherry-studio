@@ -11,6 +11,7 @@
     "packages/extension-table-plus/**/*",
     "packages/mcp-trace/**/*",
     "packages/shared/**/*",
+    "packages/enterprise-shared/**/*"
   ],
   "compilerOptions": {
     "composite": true,
@@ -29,7 +30,8 @@
       "@cherrystudio/ai-core/*": ["./packages/aiCore/src/*"],
       "@cherrystudio/ai-core": ["./packages/aiCore/src/index.ts"],
       "@cherrystudio/extension-table-plus": ["./packages/extension-table-plus/src/index.ts"],
-      "@cherrystudio/ai-sdk-provider": ["./packages/ai-sdk-provider/src/index.ts"]
+      "@cherrystudio/ai-sdk-provider": ["./packages/ai-sdk-provider/src/index.ts"],
+      "@cherry-studio/enterprise-shared": ["./packages/enterprise-shared/src/index.ts"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

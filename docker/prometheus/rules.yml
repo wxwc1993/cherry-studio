@@ -1,0 +1,47 @@
+groups:
+  - name: cherry-studio
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 错误率超过 5%"
+          description: "错误率: {{ $value | humanizePercentage }}"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 延迟超过 2 秒"
+          description: "当前 P95 延迟: {{ $value | humanizeDuration }}"
+
+      - alert: ServiceDown
+        expr: up{job="cherry-studio-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cherry Studio API 服务不可用"
+          description: "服务已宕机超过 1 分钟"
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / 1024 / 1024 > 1024
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "内存使用超过 1GB"
+          description: "当前内存使用: {{ $value | humanize1024 }}B"
+
+      - alert: HighTokenUsage
+        expr: increase(model_tokens_total[1h]) > 1000000
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "Token 用量激增"
+          description: "过去 1 小时 Token 用量: {{ $value | humanize }}"

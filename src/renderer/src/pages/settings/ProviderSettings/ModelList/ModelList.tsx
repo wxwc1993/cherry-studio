@@ -3,6 +3,7 @@ import { LoadingIcon, StreamlineGoodHealthAndWellBeing } from '@renderer/compone
 import { HStack } from '@renderer/components/Layout'
 import CustomTag from '@renderer/components/Tags/CustomTag'
 import { PROVIDER_URLS } from '@renderer/config/providers'
+import { useEnterpriseRestrictions } from '@renderer/hooks/useEnterpriseRestrictions'
 import { useProvider } from '@renderer/hooks/useProvider'
 import { getProviderLabel } from '@renderer/i18n/label'
 import { SettingHelpLink, SettingHelpText, SettingHelpTextRow, SettingSubtitle } from '@renderer/pages/settings'
@@ -48,6 +49,7 @@ const calculateModelGroups = (models: Model[], searchText: string): ModelGroups 
 const ModelList: React.FC<ModelListProps> = ({ providerId }) => {
   const { t } = useTranslation()
   const { provider, models, removeModel } = useProvider(providerId)
+  const { canAddModel, canEditModel, canDeleteModel } = useEnterpriseRestrictions()
 
   // 稳定的编辑模型回调，避免内联函数导致子组件 memo 失效
   const handleEditModel = useCallback((model: Model) => EditModelPopup.show({ provider, model }), [provider])
@@ -148,6 +150,8 @@ const ModelList: React.FC<ModelListProps> = ({ providerId }) => {
                 models={displayedModelGroups[group]}
                 modelStatusMap={modelStatusMap}
                 defaultOpen={i <= 5}
+                canEditModel={canEditModel}
+                canDeleteModel={canDeleteModel}
                 onEditModel={handleEditModel}
                 onRemoveModel={removeModel}
                 onRemoveGroup={() => displayedModelGroups[group].forEach((model) => removeModel(model))}
@@ -178,20 +182,22 @@ const ModelList: React.FC<ModelListProps> = ({ providerId }) => {
           <div style={{ height: 5 }} />
         )}
       </Flex>
-      <Flex gap={10} style={{ marginTop: 12 }}>
-        <Button type="primary" onClick={onManageModel} icon={<ListCheck size={16} />} disabled={isHealthChecking}>
-          {t('button.manage')}
-        </Button>
-        {provider.id !== 'ovms' ? (
-          <Button type="default" onClick={onAddModel} icon={<Plus size={16} />} disabled={isHealthChecking}>
-            {t('button.add')}
+      {canAddModel && (
+        <Flex gap={10} style={{ marginTop: 12 }}>
+          <Button type="primary" onClick={onManageModel} icon={<ListCheck size={16} />} disabled={isHealthChecking}>
+            {t('button.manage')}
           </Button>
-        ) : (
-          <Button type="default" onClick={onDownloadModel} icon={<Plus size={16} />}>
-            {t('button.download')}
-          </Button>
-        )}
-      </Flex>
+          {provider.id !== 'ovms' ? (
+            <Button type="default" onClick={onAddModel} icon={<Plus size={16} />} disabled={isHealthChecking}>
+              {t('button.add')}
+            </Button>
+          ) : (
+            <Button type="default" onClick={onDownloadModel} icon={<Plus size={16} />}>
+              {t('button.download')}
+            </Button>
+          )}
+        </Flex>
+      )}
     </>
   )
 }

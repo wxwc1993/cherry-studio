@@ -8,6 +8,7 @@ import {
 } from '@renderer/config/models'
 import { db } from '@renderer/databases'
 import { getDefaultTopic } from '@renderer/services/AssistantService'
+import { getModelUniqId } from '@renderer/services/ModelService'
 import { useAppDispatch, useAppSelector } from '@renderer/store'
 import {
   addAssistant,
@@ -30,6 +31,8 @@ import { uuid } from '@renderer/utils'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useEnterpriseProviders } from './useEnterpriseProviders'
+import { useEnterpriseRestrictions } from './useEnterpriseRestrictions'
 import { TopicManager } from './useTopic'
 
 export function useAssistants() {
@@ -77,8 +80,29 @@ export function useAssistant(id: string) {
   const assistant = useAppSelector((state) => state.assistants.assistants.find((a) => a.id === id) as Assistant)
   const dispatch = useAppDispatch()
   const { defaultModel } = useDefaultModel()
+  const { isEnterpriseActive } = useEnterpriseRestrictions()
+  const { providers: enterpriseProviders } = useEnterpriseProviders()
 
-  const model = useMemo(() => assistant?.model ?? assistant?.defaultModel ?? defaultModel, [assistant, defaultModel])
+  // 企业模式下验证模型是否存在于企业 providers 中
+  const model = useMemo(() => {
+    const savedModel = assistant?.model ?? assistant?.defaultModel ?? defaultModel
+    if (!savedModel) return savedModel
+
+    // 非企业模式直接返回保存的模型
+    if (!isEnterpriseActive) return savedModel
+
+    // 企业模式：验证模型是否在企业 providers 列表中
+    const enterpriseModels = enterpriseProviders.flatMap((p) => p.models)
+    const savedModelId = getModelUniqId(savedModel)
+    const modelExists = enterpriseModels.some((m) => getModelUniqId(m) === savedModelId)
+
+    if (modelExists) return savedModel
+
+    // 模型不存在于企业列表，回退到企业模式的第一个可用模型
+    const firstEnterpriseModel = enterpriseModels[0]
+    return firstEnterpriseModel ?? savedModel
+  }, [assistant, defaultModel, isEnterpriseActive, enterpriseProviders])
+
   if (!model) {
     throw new Error(`Assistant model is not set for assistant with name: ${assistant?.name ?? 'unknown'}`)
   }

@@ -1261,6 +1261,7 @@
     "more": "More",
     "name": "Name",
     "next_match": "Next match",
+    "no": "No",
     "no_results": "No results",
     "none": "None",
     "off": "Off",
@@ -1314,6 +1315,7 @@
     "upload_image": "Upload image file",
     "uploaded_image": "Uploaded image",
     "warning": "Warning",
+    "yes": "Yes",
     "you": "You"
   },
   "dialog": {
@@ -4020,6 +4022,74 @@
         "title": "Zoom Settings"
       }
     },
+    "enterprise": {
+      "accountInfo": "Account Info",
+      "connectionStatus": "Connection Status",
+      "debug": {
+        "actions": "Quick Actions",
+        "apiLogs": "API Logs",
+        "authenticated": "Authenticated",
+        "autoRefresh": "Auto Refresh",
+        "clearAuth": "Clear Auth",
+        "clearLogs": "Clear Logs",
+        "enterpriseMode": "Enterprise Mode",
+        "expired": "Expired",
+        "expiresInHours": "Expires in {{hours}} hours",
+        "expiresInMinutes": "Expires in {{minutes}} minutes",
+        "invalidToken": "Invalid token",
+        "noExpiry": "No expiry",
+        "noLogs": "No logs",
+        "noToken": "No token",
+        "open": "Open",
+        "parseError": "Parse error",
+        "refreshLogs": "Refresh Logs",
+        "showPanel": "Show Debug Panel",
+        "status": "Status Info",
+        "title": "Debug Panel",
+        "tokens": "Token Info"
+      },
+      "department": "Department",
+      "email": "Email",
+      "goToLogin": "Go to Enterprise Login",
+      "login": {
+        "backToPersonal": "Back to Personal",
+        "devLogin": "Developer Login",
+        "error": {
+          "failed": "Login failed",
+          "invalidUrl": "Invalid server URL",
+          "noServerConfig": "Enterprise server not configured, please contact your administrator",
+          "passwordRequired": "Please enter password",
+          "serverRequired": "Please enter the enterprise server URL",
+          "usernameRequired": "Please enter username"
+        },
+        "feishuLogin": "Feishu Login",
+        "loading": "Logging in...",
+        "loginButton": "Login",
+        "password": "Password",
+        "serverPlaceholder": "Enterprise server URL (e.g., https://api.example.com)",
+        "title": "Enterprise Login",
+        "username": "Username"
+      },
+      "logout": "Logout",
+      "personalMode": "Currently using personal mode.",
+      "personalModeHint": "To use enterprise features, contact your administrator for the server address, then click the button below to enter enterprise login.",
+      "role": "Role",
+      "server": "Server",
+      "stats": {
+        "monthRequests": "Monthly Requests",
+        "monthTokens": "Monthly Tokens",
+        "todayRequests": "Today's Requests",
+        "todayTokens": "Today's Tokens"
+      },
+      "status": {
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "label": "Status"
+      },
+      "title": "Enterprise",
+      "usageStats": "Usage Statistics",
+      "username": "Username"
+    },
     "font_size": {
       "title": "Message font size"
     },
@@ -4792,6 +4862,11 @@
       },
       "docs_check": "Check",
       "docs_more_details": "for more details",
+      "enterprise": {
+        "no_models": "No models configured by administrator"
+      },
+      "enterprise_managed": "This provider is managed by your enterprise administrator",
+      "enterprise_managed_tooltip": "In enterprise mode, provider settings are centrally managed",
       "get_api_key": "Get API Key",
       "misc": "Other",
       "no_models_for_check": "No models available for checking (e.g. chat models)",

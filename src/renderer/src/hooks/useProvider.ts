@@ -17,6 +17,8 @@ import { withoutTrailingSlash } from '@renderer/utils/api'
 import { useMemo } from 'react'
 
 import { useDefaultModel } from './useAssistant'
+import { useEnterpriseProviders } from './useEnterpriseProviders'
+import { useEnterpriseRestrictions } from './useEnterpriseRestrictions'
 
 /**
  * Normalizes provider apiHost by removing trailing slashes.
@@ -53,8 +55,15 @@ const selectAllProvidersWithCherryAI = createSelector(selectProviders, (provider
 )
 
 export function useProviders() {
-  const providers: Provider[] = useAppSelector(selectEnabledProviders)
+  const { isEnterpriseActive } = useEnterpriseRestrictions()
+  const { providers: enterpriseProviders } = useEnterpriseProviders()
+  const localProviders: Provider[] = useAppSelector(selectEnabledProviders)
   const dispatch = useAppDispatch()
+
+  // 根据模式选择数据源：企业模式返回企业 providers，非企业模式返回本地 providers + CherryAI
+  const providers = useMemo(() => {
+    return isEnterpriseActive ? enterpriseProviders : localProviders
+  }, [isEnterpriseActive, enterpriseProviders, localProviders])
 
   return {
     providers: providers || [],
@@ -78,17 +87,36 @@ export function useAllProviders() {
 }
 
 export function useProvider(id: string) {
-  const allProviders = useAppSelector(selectAllProvidersWithCherryAI)
-  const provider = useMemo(() => allProviders.find((p) => p.id === id) || getDefaultProvider(), [allProviders, id])
+  const { isEnterpriseActive } = useEnterpriseRestrictions()
+  const { providers: enterpriseProviders } = useEnterpriseProviders()
+  const allLocalProviders = useAppSelector(selectAllProvidersWithCherryAI)
   const dispatch = useAppDispatch()
+
+  const provider = useMemo(() => {
+    // 企业模式：优先从企业 providers 查找
+    if (isEnterpriseActive) {
+      const enterpriseProvider = enterpriseProviders.find((p) => p.id === id)
+      if (enterpriseProvider) {
+        return enterpriseProvider
+      }
+    }
+    // 本地模式或企业模式未找到：使用本地 providers
+    return allLocalProviders.find((p) => p.id === id) || getDefaultProvider()
+  }, [isEnterpriseActive, enterpriseProviders, allLocalProviders, id])
+
+  // 企业模式下禁用修改操作
+  const noOp = () => {}
 
   return {
     provider,
     models: provider?.models ?? [],
-    updateProvider: (updates: Partial<Provider>) => dispatch(updateProvider({ id, ...updates })),
-    addModel: (model: Model) => dispatch(addModel({ providerId: id, model })),
-    removeModel: (model: Model) => dispatch(removeModel({ providerId: id, model })),
-    updateModel: (model: Model) => dispatch(updateModel({ providerId: id, model }))
+    isEnterpriseActive,
+    updateProvider: isEnterpriseActive
+      ? noOp
+      : (updates: Partial<Provider>) => dispatch(updateProvider({ id, ...updates })),
+    addModel: isEnterpriseActive ? noOp : (model: Model) => dispatch(addModel({ providerId: id, model })),
+    removeModel: isEnterpriseActive ? noOp : (model: Model) => dispatch(removeModel({ providerId: id, model })),
+    updateModel: isEnterpriseActive ? noOp : (model: Model) => dispatch(updateModel({ providerId: id, model }))
   }
 }
 

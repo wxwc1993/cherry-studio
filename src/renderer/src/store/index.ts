@@ -25,6 +25,7 @@ import assistants from './assistants'
 import backup from './backup'
 import codeTools from './codeTools'
 import copilot from './copilot'
+import enterprise from './enterprise'
 import inputToolsReducer from './inputTools'
 import knowledge from './knowledge'
 import llm from './llm'
@@ -76,7 +77,8 @@ const rootReducer = combineReducers({
   translate,
   ocr,
   note,
-  toolPermissions
+  toolPermissions,
+  enterprise
 })
 
 const persistedReducer = persistReducer(

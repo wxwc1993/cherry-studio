@@ -1261,6 +1261,7 @@
     "more": "更多",
     "name": "名称",
     "next_match": "下一个匹配",
+    "no": "否",
     "no_results": "无结果",
     "none": "无",
     "off": "关闭",
@@ -1314,6 +1315,7 @@
     "upload_image": "上传图片文件",
     "uploaded_image": "已上传图片",
     "warning": "警告",
+    "yes": "是",
     "you": "用户"
   },
   "dialog": {
@@ -4020,6 +4022,74 @@
         "title": "缩放设置"
       }
     },
+    "enterprise": {
+      "accountInfo": "账号信息",
+      "connectionStatus": "连接状态",
+      "debug": {
+        "actions": "快捷操作",
+        "apiLogs": "API 日志",
+        "authenticated": "已认证",
+        "autoRefresh": "自动刷新",
+        "clearAuth": "清除认证",
+        "clearLogs": "清除日志",
+        "enterpriseMode": "企业模式",
+        "expired": "已过期",
+        "expiresInHours": "{{hours}} 小时后过期",
+        "expiresInMinutes": "{{minutes}} 分钟后过期",
+        "invalidToken": "无效令牌",
+        "noExpiry": "无过期时间",
+        "noLogs": "暂无日志",
+        "noToken": "无令牌",
+        "open": "打开",
+        "parseError": "解析错误",
+        "refreshLogs": "刷新日志",
+        "showPanel": "显示调试面板",
+        "status": "状态信息",
+        "title": "调试面板",
+        "tokens": "令牌信息"
+      },
+      "department": "部门",
+      "email": "邮箱",
+      "goToLogin": "进入企业版登录",
+      "login": {
+        "backToPersonal": "返回个人版",
+        "devLogin": "开发者登录",
+        "error": {
+          "failed": "登录失败",
+          "invalidUrl": "无效的服务器地址",
+          "noServerConfig": "未配置企业服务器地址，请联系管理员",
+          "passwordRequired": "请输入密码",
+          "serverRequired": "请输入企业服务器地址",
+          "usernameRequired": "请输入用户名"
+        },
+        "feishuLogin": "飞书登录",
+        "loading": "登录中...",
+        "loginButton": "登录",
+        "password": "密码",
+        "serverPlaceholder": "企业服务器地址 (如: https://api.example.com)",
+        "title": "企业版登录",
+        "username": "用户名"
+      },
+      "logout": "退出登录",
+      "personalMode": "当前使用个人版模式。",
+      "personalModeHint": "如需使用企业版功能，请联系管理员获取服务器地址，然后点击下方按钮进入企业版登录。",
+      "role": "角色",
+      "server": "服务器",
+      "stats": {
+        "monthRequests": "本月请求",
+        "monthTokens": "本月 Token",
+        "todayRequests": "今日请求",
+        "todayTokens": "今日 Token"
+      },
+      "status": {
+        "connected": "已连接",
+        "disconnected": "未连接",
+        "label": "状态"
+      },
+      "title": "企业版",
+      "usageStats": "使用统计",
+      "username": "用户名"
+    },
     "font_size": {
       "title": "消息字体大小"
     },
@@ -4792,6 +4862,11 @@
       },
       "docs_check": "查看",
       "docs_more_details": "获取更多详情",
+      "enterprise": {
+        "no_models": "管理员未配置任何模型"
+      },
+      "enterprise_managed": "此服务商由企业管理员统一配置，您无法修改设置",
+      "enterprise_managed_tooltip": "企业模式下，服务商配置由管理员集中管理",
       "get_api_key": "点击这里获取密钥",
       "misc": "其他",
       "no_models_for_check": "没有可以被检测的模型（例如对话模型）",

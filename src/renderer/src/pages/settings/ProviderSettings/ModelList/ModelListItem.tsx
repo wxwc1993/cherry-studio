@@ -20,11 +20,24 @@ interface ModelListItemProps {
   model: Model
   modelStatus: ModelWithStatus | undefined
   disabled?: boolean
+  /** 企业模式下是否允许编辑 */
+  canEdit?: boolean
+  /** 企业模式下是否允许删除 */
+  canDelete?: boolean
   onEdit: (model: Model) => void
   onRemove: (model: Model) => void
 }
 
-const ModelListItem: React.FC<ModelListItemProps> = ({ ref, model, modelStatus, disabled, onEdit, onRemove }) => {
+const ModelListItem: React.FC<ModelListItemProps> = ({
+  ref,
+  model,
+  modelStatus,
+  disabled,
+  canEdit = true,
+  canDelete = true,
+  onEdit,
+  onRemove
+}) => {
   const { t } = useTranslation()
   const isChecking = modelStatus?.checking === true
   const [showErrorModal, setShowErrorModal] = useState(false)
@@ -91,12 +104,16 @@ const ModelListItem: React.FC<ModelListItemProps> = ({ ref, model, modelStatus, 
             onErrorClick={handleErrorClick}
           />
           <HStack alignItems="center" gap={0}>
-            <Tooltip title={t('models.edit')} mouseLeaveDelay={0}>
-              <Button type="text" onClick={handleEdit} disabled={disabled} icon={<Bolt size={14} />} />
-            </Tooltip>
-            <Tooltip title={t('settings.models.manage.remove_model')} mouseLeaveDelay={0}>
-              <Button type="text" onClick={handleRemove} disabled={disabled} icon={<Minus size={14} />} />
-            </Tooltip>
+            {canEdit && (
+              <Tooltip title={t('models.edit')} mouseLeaveDelay={0}>
+                <Button type="text" onClick={handleEdit} disabled={disabled} icon={<Bolt size={14} />} />
+              </Tooltip>
+            )}
+            {canDelete && (
+              <Tooltip title={t('settings.models.manage.remove_model')} mouseLeaveDelay={0}>
+                <Button type="text" onClick={handleRemove} disabled={disabled} icon={<Minus size={14} />} />
+              </Tooltip>
+            )}
           </HStack>
         </HStack>
       </ListItem>

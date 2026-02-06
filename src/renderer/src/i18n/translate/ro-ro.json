@@ -1261,6 +1261,7 @@
     "more": "Mai mult",
     "name": "Nume",
     "next_match": "Următorul meci",
+    "no": "[to be translated]:No",
     "no_results": "Niciun rezultat",
     "none": "Nimic",
     "off": "Oprit",
@@ -1314,6 +1315,7 @@
     "upload_image": "Încarcă fișier imagine",
     "uploaded_image": "Imagine încărcată",
     "warning": "Avertisment",
+    "yes": "[to be translated]:Yes",
     "you": "Tu"
   },
   "dialog": {
@@ -4020,6 +4022,74 @@
         "title": "Setări zoom"
       }
     },
+    "enterprise": {
+      "accountInfo": "[to be translated]:Account Info",
+      "connectionStatus": "[to be translated]:Connection Status",
+      "debug": {
+        "actions": "[to be translated]:Quick Actions",
+        "apiLogs": "[to be translated]:API Logs",
+        "authenticated": "[to be translated]:Authenticated",
+        "autoRefresh": "[to be translated]:Auto Refresh",
+        "clearAuth": "[to be translated]:Clear Auth",
+        "clearLogs": "[to be translated]:Clear Logs",
+        "enterpriseMode": "[to be translated]:Enterprise Mode",
+        "expired": "[to be translated]:Expired",
+        "expiresInHours": "[to be translated]:Expires in {{hours}} hours",
+        "expiresInMinutes": "[to be translated]:Expires in {{minutes}} minutes",
+        "invalidToken": "[to be translated]:Invalid token",
+        "noExpiry": "[to be translated]:No expiry",
+        "noLogs": "[to be translated]:No logs",
+        "noToken": "[to be translated]:No token",
+        "open": "[to be translated]:Open",
+        "parseError": "[to be translated]:Parse error",
+        "refreshLogs": "[to be translated]:Refresh Logs",
+        "showPanel": "[to be translated]:Show Debug Panel",
+        "status": "[to be translated]:Status Info",
+        "title": "[to be translated]:Debug Panel",
+        "tokens": "[to be translated]:Token Info"
+      },
+      "department": "[to be translated]:Department",
+      "email": "[to be translated]:Email",
+      "goToLogin": "[to be translated]:Go to Enterprise Login",
+      "login": {
+        "backToPersonal": "[to be translated]:Back to Personal",
+        "devLogin": "[to be translated]:Developer Login",
+        "error": {
+          "failed": "[to be translated]:Login failed",
+          "invalidUrl": "[to be translated]:Invalid server URL",
+          "noServerConfig": "[to be translated]:Enterprise server not configured, please contact your administrator",
+          "passwordRequired": "[to be translated]:Please enter password",
+          "serverRequired": "[to be translated]:Please enter the enterprise server URL",
+          "usernameRequired": "[to be translated]:Please enter username"
+        },
+        "feishuLogin": "[to be translated]:Feishu Login",
+        "loading": "[to be translated]:Logging in...",
+        "loginButton": "[to be translated]:Login",
+        "password": "[to be translated]:Password",
+        "serverPlaceholder": "[to be translated]:Enterprise server URL (e.g., https://api.example.com)",
+        "title": "[to be translated]:Enterprise Login",
+        "username": "[to be translated]:Username"
+      },
+      "logout": "[to be translated]:Logout",
+      "personalMode": "[to be translated]:Currently using personal mode.",
+      "personalModeHint": "[to be translated]:To use enterprise features, contact your administrator for the server address, then click the button below to enter enterprise login.",
+      "role": "[to be translated]:Role",
+      "server": "[to be translated]:Server",
+      "stats": {
+        "monthRequests": "[to be translated]:Monthly Requests",
+        "monthTokens": "[to be translated]:Monthly Tokens",
+        "todayRequests": "[to be translated]:Today's Requests",
+        "todayTokens": "[to be translated]:Today's Tokens"
+      },
+      "status": {
+        "connected": "[to be translated]:Connected",
+        "disconnected": "[to be translated]:Disconnected",
+        "label": "[to be translated]:Status"
+      },
+      "title": "[to be translated]:Enterprise",
+      "usageStats": "[to be translated]:Usage Statistics",
+      "username": "[to be translated]:Username"
+    },
     "font_size": {
       "title": "Dimensiune font mesaj"
     },
@@ -4792,6 +4862,8 @@
       },
       "docs_check": "Verifică",
       "docs_more_details": "pentru mai multe detalii",
+      "enterprise_managed": "[to be translated]:This provider is managed by your enterprise administrator",
+      "enterprise_managed_tooltip": "[to be translated]:In enterprise mode, provider settings are centrally managed",
       "get_api_key": "Obține cheie API",
       "misc": "Altele",
       "no_models_for_check": "Nu există modele disponibile pentru verificare (de ex. modele chat)",

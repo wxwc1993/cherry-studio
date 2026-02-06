@@ -19,6 +19,10 @@ interface ModelListGroupProps {
   modelStatusMap: Map<string, ModelWithStatus>
   defaultOpen: boolean
   disabled?: boolean
+  /** 企业模式下是否允许编辑模型 */
+  canEditModel?: boolean
+  /** 企业模式下是否允许删除模型 */
+  canDeleteModel?: boolean
   onEditModel: (model: Model) => void
   onRemoveModel: (model: Model) => void
   onRemoveGroup: () => void
@@ -30,6 +34,8 @@ const ModelListGroup: React.FC<ModelListGroupProps> = ({
   modelStatusMap,
   defaultOpen,
   disabled,
+  canEditModel = true,
+  canDeleteModel = true,
   onEditModel,
   onRemoveModel,
   onRemoveGroup
@@ -56,18 +62,20 @@ const ModelListGroup: React.FC<ModelListGroupProps> = ({
           </Flex>
         }
         extra={
-          <Tooltip title={t('settings.models.manage.remove_whole_group')} mouseLeaveDelay={0}>
-            <Button
-              type="text"
-              className="toolbar-item"
-              icon={<Minus size={14} />}
-              onClick={(e) => {
-                e.stopPropagation()
-                onRemoveGroup()
-              }}
-              disabled={disabled}
-            />
-          </Tooltip>
+          canDeleteModel && (
+            <Tooltip title={t('settings.models.manage.remove_whole_group')} mouseLeaveDelay={0}>
+              <Button
+                type="text"
+                className="toolbar-item"
+                icon={<Minus size={14} />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRemoveGroup()
+                }}
+                disabled={disabled}
+              />
+            </Tooltip>
+          )
         }
         styles={{
           header: {
@@ -94,6 +102,8 @@ const ModelListGroup: React.FC<ModelListGroupProps> = ({
               onEdit={onEditModel}
               onRemove={onRemoveModel}
               disabled={disabled}
+              canEdit={canEditModel}
+              canDelete={canDeleteModel}
             />
           )}
         </DynamicVirtualList>

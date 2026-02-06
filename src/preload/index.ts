@@ -604,6 +604,10 @@ const api = {
     writeContent: (options: WritePluginContentOptions): Promise<PluginResult<void>> =>
       ipcRenderer.invoke(IpcChannel.ClaudeCodePlugin_WriteContent, options)
   },
+  enterprise: {
+    getConfig: (): Promise<{ serverUrl: string | null; feishuAppId: string | null }> =>
+      ipcRenderer.invoke(IpcChannel.Enterprise_GetConfig)
+  },
   localTransfer: {
     getState: (): Promise<LocalTransferState> => ipcRenderer.invoke(IpcChannel.LocalTransfer_ListServices),
     startScan: (): Promise<LocalTransferState> => ipcRenderer.invoke(IpcChannel.LocalTransfer_StartScan),

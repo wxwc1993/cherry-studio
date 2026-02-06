@@ -22,3 +22,9 @@ export const DEFAULT_SIDEBAR_ICONS: SidebarIcon[] = [
  * 抽取为参数方便未来扩展
  */
 export const REQUIRED_SIDEBAR_ICONS: SidebarIcon[] = ['assistants']
+
+/**
+ * 企业版禁用的侧边栏图标
+ * 企业模式下这些图标不会在侧边栏中显示
+ */
+export const ENTERPRISE_DISABLED_ICONS: SidebarIcon[] = ['minapp']

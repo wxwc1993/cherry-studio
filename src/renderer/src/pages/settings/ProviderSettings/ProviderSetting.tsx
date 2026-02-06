@@ -9,6 +9,7 @@ import { HelpTooltip } from '@renderer/components/TooltipIcons'
 import { isRerankModel } from '@renderer/config/models'
 import { PROVIDER_URLS } from '@renderer/config/providers'
 import { useTheme } from '@renderer/context/ThemeProvider'
+import { useEnterpriseRestrictions } from '@renderer/hooks/useEnterpriseRestrictions'
 import { useAllProviders, useProvider, useProviders } from '@renderer/hooks/useProvider'
 import { useTimer } from '@renderer/hooks/useTimer'
 import AnthropicSettings from '@renderer/pages/settings/ProviderSettings/AnthropicSettings'
@@ -35,7 +36,7 @@ import {
   isSupportAnthropicPromptCacheProvider,
   isVertexProvider
 } from '@renderer/utils/provider'
-import { Button, Divider, Flex, Input, Select, Space, Switch, Tooltip } from 'antd'
+import { Alert, Button, Divider, Flex, Input, Select, Space, Switch, Tooltip } from 'antd'
 import Link from 'antd/es/typography/Link'
 import { debounce, isEmpty } from 'lodash'
 import { Bolt, Check, Settings2, SquareArrowOutUpRight, TriangleAlert } from 'lucide-react'
@@ -100,6 +101,7 @@ const ProviderSetting: FC<Props> = ({ providerId }) => {
   const { provider, updateProvider, models } = useProvider(providerId)
   const allProviders = useAllProviders()
   const { updateProviders } = useProviders()
+  const { isEnterpriseActive, canModifyProviderSettings } = useEnterpriseRestrictions()
   const [apiHost, setApiHost] = useState(provider.apiHost)
   const [anthropicApiHost, setAnthropicHost] = useState<string | undefined>(provider.anthropicApiHost)
   const [apiVersion, setApiVersion] = useState(provider.apiVersion)
@@ -409,6 +411,9 @@ const ProviderSetting: FC<Props> = ({ providerId }) => {
 
   return (
     <SettingContainer theme={theme} style={{ background: 'var(--color-background)' }}>
+      {isEnterpriseActive && (
+        <Alert type="info" showIcon message={t('settings.provider.enterprise_managed')} style={{ marginBottom: 16 }} />
+      )}
       <SettingTitle>
         <Flex align="center" gap={8}>
           <ProviderName>{fancyProviderName}</ProviderName>
@@ -417,27 +422,30 @@ const ProviderSetting: FC<Props> = ({ providerId }) => {
               <Button type="text" size="small" icon={<SquareArrowOutUpRight size={14} />} />
             </Link>
           )}
-          {(!isSystemProvider(provider) || isSupportAnthropicPromptCacheProvider(provider)) && (
-            <Tooltip title={t('settings.provider.api.options.label')}>
-              <Button
-                type="text"
-                icon={<Bolt size={14} />}
-                size="small"
-                onClick={() => ApiOptionsSettingsPopup.show({ providerId: provider.id })}
-              />
-            </Tooltip>
-          )}
+          {(!isSystemProvider(provider) || isSupportAnthropicPromptCacheProvider(provider)) &&
+            canModifyProviderSettings && (
+              <Tooltip title={t('settings.provider.api.options.label')}>
+                <Button
+                  type="text"
+                  icon={<Bolt size={14} />}
+                  size="small"
+                  onClick={() => ApiOptionsSettingsPopup.show({ providerId: provider.id })}
+                />
+              </Tooltip>
+            )}
         </Flex>
-        <Switch
-          value={provider.enabled}
-          key={provider.id}
-          onChange={(enabled) => {
-            updateProvider({ apiHost, enabled })
-            if (enabled) {
-              moveProviderToTop(provider.id)
-            }
-          }}
-        />
+        {!isEnterpriseActive && (
+          <Switch
+            value={provider.enabled}
+            key={provider.id}
+            onChange={(enabled) => {
+              updateProvider({ apiHost, enabled })
+              if (enabled) {
+                moveProviderToTop(provider.id)
+              }
+            }}
+          />
+        )}
       </SettingTitle>
       <Divider style={{ width: '100%', margin: '10px 0' }} />
       {isProviderSupportAuth(provider) && <ProviderOAuth providerId={provider.id} />}
@@ -459,7 +467,7 @@ const ProviderSetting: FC<Props> = ({ providerId }) => {
           {provider.authType === 'oauth' && <AnthropicSettings />}
         </>
       )}
-      {!hideApiInput && !isAnthropicOAuth() && (
+      {!hideApiInput && !isAnthropicOAuth() && !isEnterpriseActive && (
         <>
           {!hideApiKeyInput && (
             <>
@@ -601,7 +609,7 @@ const ProviderSetting: FC<Props> = ({ providerId }) => {
           )}
         </>
       )}
-      {isAzureOpenAI && (
+      {isAzureOpenAI && !isEnterpriseActive && (
         <>
           <SettingSubtitle>{t('settings.provider.api_version')}</SettingSubtitle>
           <Space.Compact style={{ width: '100%', marginTop: 5 }}>
@@ -619,11 +627,11 @@ const ProviderSetting: FC<Props> = ({ providerId }) => {
           </SettingHelpTextRow>
         </>
       )}
-      {provider.id === 'lmstudio' && <LMStudioSettings />}
-      {provider.id === 'gpustack' && <GPUStackSettings />}
-      {provider.id === 'copilot' && <GithubCopilotSettings providerId={provider.id} />}
-      {provider.id === 'aws-bedrock' && <AwsBedrockSettings />}
-      {provider.id === 'vertexai' && <VertexAISettings />}
+      {provider.id === 'lmstudio' && !isEnterpriseActive && <LMStudioSettings />}
+      {provider.id === 'gpustack' && !isEnterpriseActive && <GPUStackSettings />}
+      {provider.id === 'copilot' && !isEnterpriseActive && <GithubCopilotSettings providerId={provider.id} />}
+      {provider.id === 'aws-bedrock' && !isEnterpriseActive && <AwsBedrockSettings />}
+      {provider.id === 'vertexai' && !isEnterpriseActive && <VertexAISettings />}
       <ModelList providerId={provider.id} />
     </SettingContainer>
   )

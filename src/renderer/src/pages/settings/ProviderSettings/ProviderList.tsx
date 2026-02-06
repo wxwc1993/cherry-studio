@@ -7,6 +7,8 @@ import {
 } from '@renderer/components/DraggableList'
 import { DeleteIcon, EditIcon } from '@renderer/components/Icons'
 import { ProviderAvatar } from '@renderer/components/ProviderAvatar'
+import { useEnterpriseProviders } from '@renderer/hooks/useEnterpriseProviders'
+import { useEnterpriseRestrictions } from '@renderer/hooks/useEnterpriseRestrictions'
 import { useAllProviders, useProviders } from '@renderer/hooks/useProvider'
 import { useTimer } from '@renderer/hooks/useTimer'
 import ImageStorage from '@renderer/services/ImageStorage'
@@ -14,10 +16,10 @@ import type { Provider, ProviderType } from '@renderer/types'
 import { isSystemProvider } from '@renderer/types'
 import { getFancyProviderName, matchKeywordsInModel, matchKeywordsInProvider, uuid } from '@renderer/utils'
 import type { MenuProps } from 'antd'
-import { Button, Dropdown, Input, Tag } from 'antd'
+import { Button, Dropdown, Empty, Input, Spin, Tag } from 'antd'
 import { GripVertical, PlusIcon, Search, UserPen } from 'lucide-react'
 import type { FC } from 'react'
-import { startTransition, useCallback, useEffect, useRef, useState } from 'react'
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
@@ -44,9 +46,21 @@ const getIsOvmsSupported = async (): Promise<boolean> => {
 
 const ProviderList: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const providers = useAllProviders()
+  const localProviders = useAllProviders()
   const { updateProviders, addProvider, removeProvider, updateProvider } = useProviders()
+  const { canAddProvider, canEditProvider, canDeleteProvider, isEnterpriseActive } = useEnterpriseRestrictions()
+  const {
+    providers: enterpriseProviders,
+    isLoading: enterpriseLoading,
+    isEmpty: enterpriseEmpty
+  } = useEnterpriseProviders()
   const { setTimeoutTimer } = useTimer()
+
+  // 根据模式选择数据源
+  const providers = useMemo(() => {
+    return isEnterpriseActive ? enterpriseProviders : localProviders
+  }, [isEnterpriseActive, enterpriseProviders, localProviders])
+
   const [selectedProvider, _setSelectedProvider] = useState<Provider>(providers[0])
   const { t } = useTranslation()
   const [searchText, setSearchText] = useState<string>('')
@@ -59,6 +73,13 @@ const ProviderList: FC = () => {
   const setSelectedProvider = useCallback((provider: Provider) => {
     startTransition(() => _setSelectedProvider(provider))
   }, [])
+
+  // 当 providers 变化时，确保 selectedProvider 有效
+  useEffect(() => {
+    if (providers.length > 0 && !providers.find((p) => p.id === selectedProvider?.id)) {
+      setSelectedProvider(providers[0])
+    }
+  }, [providers, selectedProvider?.id, setSelectedProvider])
 
   useEffect(() => {
     const loadAllLogos = async () => {
@@ -271,6 +292,11 @@ const ProviderList: FC = () => {
       }
     }
 
+    // 企业模式下只显示备注菜单
+    if (!canEditProvider && !canDeleteProvider) {
+      return [noteMenu]
+    }
+
     const menus = [editMenu, noteMenu, deleteMenu]
 
     if (providers.filter((p) => p.id === provider.id).length > 1) {
@@ -319,6 +345,30 @@ const ProviderList: FC = () => {
     [handleReorder]
   )
 
+  const estimateSize = useCallback(() => 40, [])
+
+  // 企业模式加载中
+  if (isEnterpriseActive && enterpriseLoading) {
+    return (
+      <Container className="selectable">
+        <ProviderListContainer style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Spin tip={t('common.loading')} />
+        </ProviderListContainer>
+      </Container>
+    )
+  }
+
+  // 企业模式无配置
+  if (isEnterpriseActive && enterpriseEmpty) {
+    return (
+      <Container className="selectable">
+        <ProviderListContainer style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <Empty description={t('settings.provider.enterprise.no_models')} />
+        </ProviderListContainer>
+      </Container>
+    )
+  }
+
   return (
     <Container className="selectable">
       <ProviderListContainer>
@@ -345,7 +395,7 @@ const ProviderList: FC = () => {
           list={filteredProviders}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          estimateSize={useCallback(() => 40, [])}
+          estimateSize={estimateSize}
           itemKey={itemKey}
           overscan={3}
           style={{
@@ -383,15 +433,17 @@ const ProviderList: FC = () => {
             </Dropdown>
           )}
         </DraggableVirtualList>
-        <AddButtonWrapper>
-          <Button
-            style={{ width: '100%', borderRadius: 'var(--list-item-border-radius)' }}
-            icon={<PlusIcon size={16} />}
-            onClick={onAddProvider}
-            disabled={dragging}>
-            {t('button.add')}
-          </Button>
-        </AddButtonWrapper>
+        {canAddProvider && (
+          <AddButtonWrapper>
+            <Button
+              style={{ width: '100%', borderRadius: 'var(--list-item-border-radius)' }}
+              icon={<PlusIcon size={16} />}
+              onClick={onAddProvider}
+              disabled={dragging}>
+              {t('button.add')}
+            </Button>
+          </AddButtonWrapper>
+        )}
       </ProviderListContainer>
       <ProviderSetting providerId={selectedProvider.id} key={selectedProvider.id} />
     </Container>
