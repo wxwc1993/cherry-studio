@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
-
 import type { ApiLogEntry } from '@renderer/services/EnterpriseApi'
 import { enterpriseApi } from '@renderer/services/EnterpriseApi'
 import { useEnterpriseStore } from '@renderer/store/enterprise'
+import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 interface Props {
   onClose: () => void

@@ -1,8 +1,8 @@
+import { enterpriseApi } from '@renderer/services/EnterpriseApi'
+import { type EnterpriseUser, useEnterpriseStore } from '@renderer/store/enterprise'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
-import { type EnterpriseUser, useEnterpriseStore } from '@renderer/store/enterprise'
-import { enterpriseApi } from '@renderer/services/EnterpriseApi'
 
 const Container = styled.div`
   min-height: 100vh;

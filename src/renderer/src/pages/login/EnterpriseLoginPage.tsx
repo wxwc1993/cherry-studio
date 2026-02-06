@@ -1,13 +1,11 @@
+import { useEnterpriseConfig } from '@renderer/hooks/useEnterpriseConfig'
+import { enterpriseApi } from '@renderer/services/EnterpriseApi'
+import { type EnterpriseUser, useEnterpriseStore } from '@renderer/store/enterprise'
+import { Button, Input, Segmented, Spin } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
-
-import { Button, Input, Segmented, Spin } from 'antd'
-
-import { useEnterpriseConfig } from '@renderer/hooks/useEnterpriseConfig'
-import { enterpriseApi } from '@renderer/services/EnterpriseApi'
-import { type EnterpriseUser, useEnterpriseStore } from '@renderer/store/enterprise'
 
 type LoginMode = 'feishu' | 'dev'
 

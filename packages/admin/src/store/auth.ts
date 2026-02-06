@@ -1,6 +1,7 @@
+import type { RolePermissions } from '@cherry-studio/enterprise-shared'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { RolePermissions } from '@cherry-studio/enterprise-shared'
+
 import { api } from '../services/api'
 
 interface User {

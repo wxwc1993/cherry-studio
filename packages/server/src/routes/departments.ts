@@ -2,12 +2,13 @@ import {
   createDepartmentSchema,
   createSuccessResponse,
   generateDepartmentPath,
-  updateDepartmentSchema} from '@cherry-studio/enterprise-shared'
+  updateDepartmentSchema
+} from '@cherry-studio/enterprise-shared'
 import { and, eq, sql } from 'drizzle-orm'
 import { Router } from 'express'
 
 import { authenticate, requirePermission } from '../middleware/auth'
-import { ConflictError,NotFoundError } from '../middleware/errorHandler'
+import { ConflictError, NotFoundError } from '../middleware/errorHandler'
 import { validate } from '../middleware/validate'
 import { db, departments, users } from '../models'
 import { createLogger } from '../utils/logger'

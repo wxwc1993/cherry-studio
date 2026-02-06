@@ -3,17 +3,18 @@ import {
   createModelSchema,
   createSuccessResponse,
   paginationParamsSchema,
-  updateModelSchema} from '@cherry-studio/enterprise-shared'
+  updateModelSchema
+} from '@cherry-studio/enterprise-shared'
 import { ERROR_CODES } from '@cherry-studio/enterprise-shared'
 import { and, eq, sql } from 'drizzle-orm'
 import { Router } from 'express'
 
-import { modelCostTotal,modelTokensTotal } from '../metrics'
+import { modelCostTotal, modelTokensTotal } from '../metrics'
 import { authenticate, requirePermission } from '../middleware/auth'
-import { AppError,AuthorizationError, NotFoundError, QuotaExceededError } from '../middleware/errorHandler'
+import { AppError, AuthorizationError, NotFoundError, QuotaExceededError } from '../middleware/errorHandler'
 import { chatLimiter } from '../middleware/rate-limit.middleware'
 import { validate } from '../middleware/validate'
-import { db,modelPermissions, models, usageLogs } from '../models'
+import { db, modelPermissions, models, usageLogs } from '../models'
 import { cryptoService } from '../services/crypto.service'
 import { quotaAlertService } from '../services/quota-alert.service'
 import { createLogger } from '../utils/logger'
@@ -140,8 +141,6 @@ async function checkQuota(modelId: string, userId: string, companyId: string): P
  */
 router.get('/', validate(paginationParamsSchema, 'query'), async (req, res, next) => {
   try {
-    const params = req.query as any
-
     const modelList = await db.query.models.findMany({
       where: and(eq(models.companyId, req.user!.companyId), eq(models.isEnabled, true)),
       orderBy: models.displayName
@@ -213,7 +212,7 @@ router.get('/:id', requirePermission('models', 'read'), async (req, res, next) =
  */
 router.post('/:id/chat', chatLimiter, validate(chatRequestSchema), async (req, res, next) => {
   try {
-    const { messages: chatMessages, conversationId, stream, knowledgeBaseIds, config: chatConfig } = req.body
+    const { messages: chatMessages, conversationId, stream, config: chatConfig } = req.body
     const modelId = req.params.id
 
     // 检查模型存在且启用
@@ -279,7 +278,7 @@ router.post('/:id/chat', chatLimiter, validate(chatRequestSchema), async (req, r
 
       let inputTokens = 0
       let outputTokens = 0
-      let fullContent = ''
+      let _fullContent = ''
 
       try {
         while (true) {
@@ -300,7 +299,7 @@ router.post('/:id/chat', chatLimiter, validate(chatRequestSchema), async (req, r
                   outputTokens = data.usage.completion_tokens || 0
                 }
                 if (data.choices?.[0]?.delta?.content) {
-                  fullContent += data.choices[0].delta.content
+                  _fullContent += data.choices[0].delta.content
                 }
               } catch {
                 // 忽略解析错误

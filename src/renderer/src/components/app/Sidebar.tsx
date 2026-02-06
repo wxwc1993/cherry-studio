@@ -40,27 +40,24 @@ import { SidebarOpenedMinappTabs, SidebarPinnedApps } from './PinnedMinapps'
 
 const Sidebar: FC = () => {
   const { pathname } = useLocation()
+  const { hideMinappPopup } = useMinappPopup()
+  const { minappShow } = useRuntime()
+  const { sidebarIcons } = useSettings()
+  const { pinned } = useMinapps()
+  const filteredIcons = useEnterpriseSidebarIcons(sidebarIcons.visible)
+  const navigate = useNavigate()
+  const { theme, settedTheme, toggleTheme } = useTheme()
+  const avatar = useAvatar()
+  const { t } = useTranslation()
+  const backgroundColor = useNavBackgroundColor()
+  const isFullscreen = useFullscreen()
 
   // 登录页面不显示 Sidebar
   if (pathname.startsWith('/login')) {
     return null
   }
 
-  const { hideMinappPopup } = useMinappPopup()
-  const { minappShow } = useRuntime()
-  const { sidebarIcons } = useSettings()
-  const { pinned } = useMinapps()
-  const filteredIcons = useEnterpriseSidebarIcons(sidebarIcons.visible)
-
-  const navigate = useNavigate()
-
-  const { theme, settedTheme, toggleTheme } = useTheme()
-  const avatar = useAvatar()
-  const { t } = useTranslation()
-
   const onEditUser = () => UserPopup.show()
-
-  const backgroundColor = useNavBackgroundColor()
 
   const showPinnedApps = pinned.length > 0 && filteredIcons.includes('minapp')
 
@@ -68,8 +65,6 @@ const Sidebar: FC = () => {
     await modelGenerating()
     navigate(path)
   }
-
-  const isFullscreen = useFullscreen()
 
   return (
     <Container

@@ -1,6 +1,6 @@
-import {eq, sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
-import { db, documentChunks, kbDocuments,knowledgeBases } from '../models'
+import { db, documentChunks, kbDocuments, knowledgeBases } from '../models'
 import { createLogger } from '../utils/logger'
 
 const logger = createLogger('VectorService')

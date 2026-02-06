@@ -5,7 +5,7 @@ import path from 'path'
 import { promisify } from 'util'
 import { v4 as uuidv4 } from 'uuid'
 
-import { backups,db } from '../models'
+import { backups, db } from '../models'
 import { createLogger } from '../utils/logger'
 import { getStorageService } from './storage'
 

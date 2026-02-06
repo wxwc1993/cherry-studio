@@ -1,7 +1,6 @@
-import { useMemo } from 'react'
-
 import { groupModelsToProviders } from '@renderer/services/EnterpriseModelAdapter'
 import type { Provider } from '@renderer/types'
+import { useMemo } from 'react'
 
 import { useEnterpriseModels } from './useEnterpriseModels'
 

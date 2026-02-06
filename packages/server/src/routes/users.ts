@@ -4,14 +4,15 @@ import {
   createSuccessResponse,
   createUserSchema,
   paginationParamsSchema,
-  updateUserSchema} from '@cherry-studio/enterprise-shared'
+  updateUserSchema
+} from '@cherry-studio/enterprise-shared'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { Router } from 'express'
 
 import { authenticate, requirePermission } from '../middleware/auth'
-import { ConflictError,NotFoundError } from '../middleware/errorHandler'
+import { ConflictError, NotFoundError } from '../middleware/errorHandler'
 import { validate } from '../middleware/validate'
-import { db, departments, roles,users } from '../models'
+import { db, departments, roles, users } from '../models'
 import { createLogger } from '../utils/logger'
 
 const router = Router()

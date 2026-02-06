@@ -1,4 +1,4 @@
-import type { NextFunction,Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import type { ZodSchema } from 'zod'
 
 type RequestPart = 'body' | 'query' | 'params'

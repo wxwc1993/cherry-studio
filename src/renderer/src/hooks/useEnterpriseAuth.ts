@@ -1,5 +1,3 @@
-import { useCallback, useEffect } from 'react'
-
 import { enterpriseApi } from '@renderer/services/EnterpriseApi'
 import { useAppSelector } from '@renderer/store'
 import {
@@ -9,6 +7,7 @@ import {
   selectUser,
   useEnterpriseStore
 } from '@renderer/store/enterprise'
+import { useCallback, useEffect } from 'react'
 
 /**
  * 企业版认证 Hook

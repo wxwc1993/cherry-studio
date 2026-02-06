@@ -1,6 +1,6 @@
-import type { NextFunction,Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 
-import { httpRequestDuration,httpRequestsTotal } from '../metrics'
+import { httpRequestDuration, httpRequestsTotal } from '../metrics'
 
 /**
  * Prometheus 指标采集中间件

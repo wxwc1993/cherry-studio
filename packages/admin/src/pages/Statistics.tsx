@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Row, Col, Card, Table, DatePicker, Select, Button, Spin, message, Statistic } from 'antd'
 import { DownloadOutlined } from '@ant-design/icons'
-import ReactECharts from 'echarts-for-react'
-import { statisticsApi, modelsApi, departmentsApi } from '../services/api'
+import { Button, Card, Col, DatePicker, message, Row, Select, Spin, Statistic, Table } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
-import type { ColumnsType } from 'antd/es/table'
+import ReactECharts from 'echarts-for-react'
+import { useEffect, useState } from 'react'
+
+import { departmentsApi, modelsApi, statisticsApi } from '../services/api'
 
 const { RangePicker } = DatePicker
 
@@ -223,7 +224,7 @@ export default function Statistics() {
   }
 
   // 空数据状态处理
-  const hasData = usageData.length > 0 || modelUsage.length > 0 || userUsage.length > 0
+  const _hasData = usageData.length > 0 || modelUsage.length > 0 || userUsage.length > 0
 
   return (
     <div>

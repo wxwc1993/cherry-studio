@@ -1,9 +1,9 @@
-import { createPagination,createSuccessResponse } from '@cherry-studio/enterprise-shared'
+import { createPagination, createSuccessResponse } from '@cherry-studio/enterprise-shared'
 import { desc, eq, sql } from 'drizzle-orm'
 import { Router } from 'express'
 
 import { authenticate } from '../middleware/auth'
-import { AuthorizationError,NotFoundError } from '../middleware/errorHandler'
+import { AuthorizationError, NotFoundError } from '../middleware/errorHandler'
 import { db } from '../models/db'
 import { conversations, messages } from '../models/schema'
 

@@ -1,6 +1,6 @@
+import { ENTERPRISE_PROVIDER_IDS, isEnterpriseProviderId } from '@cherry-studio/enterprise-shared'
 import type { Model, ModelCapability, ModelPricing, ModelType, Provider } from '@renderer/types'
 import { isSystemProviderId } from '@renderer/types'
-import { ENTERPRISE_PROVIDER_IDS, isEnterpriseProviderId } from '@cherry-studio/enterprise-shared'
 
 /**
  * 企业 API 返回的模型格式

@@ -1,16 +1,14 @@
 import type { JWTPayload } from '@cherry-studio/enterprise-shared'
 import { randomUUID } from 'crypto'
-import type { NextFunction,Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import * as jose from 'jose'
 
 import { config } from '../config'
 import { AuthenticationError, AuthorizationError } from './errorHandler'
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: JWTPayload
   }
 }
 

@@ -1,5 +1,5 @@
 import { createErrorResponse, ERROR_CODES } from '@cherry-studio/enterprise-shared'
-import type { ErrorRequestHandler, NextFunction,Request, Response } from 'express'
+import type { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
 
 import { createLogger } from '../utils/logger'

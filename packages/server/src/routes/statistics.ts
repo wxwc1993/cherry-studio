@@ -1,14 +1,14 @@
-import { createSuccessResponse,usageQuerySchema } from '@cherry-studio/enterprise-shared'
-import { and, desc,eq, gte, lte, sql } from 'drizzle-orm'
+import { createSuccessResponse, usageQuerySchema } from '@cherry-studio/enterprise-shared'
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { Router } from 'express'
 
 import { authenticate, requirePermission } from '../middleware/auth'
 import { validate } from '../middleware/validate'
-import { conversations,db, models, usageLogs, users } from '../models'
+import { conversations, db, models, usageLogs, users } from '../models'
 import { createLogger } from '../utils/logger'
 
 const router = Router()
-const logger = createLogger('StatisticsRoutes')
+const _logger = createLogger('StatisticsRoutes')
 
 router.use(authenticate)
 router.use(requirePermission('statistics', 'read'))
@@ -121,25 +121,21 @@ router.get('/overview', async (req, res, next) => {
  */
 router.get('/usage', validate(usageQuerySchema, 'query'), async (req, res, next) => {
   try {
-    const { startDate, endDate, groupBy, userId, modelId, departmentId } = req.query as any
+    const { startDate, endDate, groupBy, userId, modelId } = req.query as any
     const companyId = req.user!.companyId
 
     let groupByClause: string
-    let dateFormat: string
 
     switch (groupBy) {
       case 'week':
         groupByClause = `date_trunc('week', created_at)`
-        dateFormat = 'YYYY-WW'
         break
       case 'month':
         groupByClause = `date_trunc('month', created_at)`
-        dateFormat = 'YYYY-MM'
         break
       case 'day':
       default:
         groupByClause = `date_trunc('day', created_at)`
-        dateFormat = 'YYYY-MM-DD'
     }
 
     const conditions = [

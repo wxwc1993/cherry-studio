@@ -240,4 +240,4 @@ export const activeConnections = registry.createGauge('active_connections', 'Num
  */
 export const userQuotaRemaining = registry.createGauge('user_quota_remaining', 'Remaining user quota', ['user_id'])
 
-export { Counter, Gauge,Histogram }
+export { Counter, Gauge, Histogram }

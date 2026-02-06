@@ -1,8 +1,7 @@
-import { type FC, type ReactNode } from 'react'
-import { Navigate } from 'react-router-dom'
-
 import { useAppSelector } from '@renderer/store'
 import { selectIsEnterpriseMode } from '@renderer/store/enterprise'
+import { type FC, type ReactNode } from 'react'
+import { Navigate } from 'react-router-dom'
 
 interface EnterpriseMinAppGuardProps {
   children: ReactNode

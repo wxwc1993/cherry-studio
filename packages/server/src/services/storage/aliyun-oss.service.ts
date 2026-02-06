@@ -1,7 +1,7 @@
 import OSS from 'ali-oss'
 
 import { createLogger } from '../../utils/logger'
-import type { StorageMetadata,StorageObject, StorageService } from './storage.interface'
+import type { StorageMetadata, StorageObject, StorageService } from './storage.interface'
 
 const logger = createLogger('AliyunOSSService')
 

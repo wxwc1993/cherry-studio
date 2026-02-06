@@ -11,7 +11,8 @@ import {
   text,
   timestamp,
   uuid,
-  varchar} from 'drizzle-orm/pg-core'
+  varchar
+} from 'drizzle-orm/pg-core'
 
 // ============ 自定义类型：pgvector ============
 

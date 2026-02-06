@@ -1,16 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthStore } from './store/auth'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+
 import Layout from './components/Layout'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Users from './pages/Users'
-import Departments from './pages/Departments'
-import Roles from './pages/Roles'
-import Models from './pages/Models'
-import KnowledgeBases from './pages/KnowledgeBases'
-import Statistics from './pages/Statistics'
 import Backups from './pages/Backups'
+import Dashboard from './pages/Dashboard'
+import Departments from './pages/Departments'
+import KnowledgeBases from './pages/KnowledgeBases'
+import Login from './pages/Login'
+import Models from './pages/Models'
+import Roles from './pages/Roles'
 import Settings from './pages/Settings'
+import Statistics from './pages/Statistics'
+import Users from './pages/Users'
+import { useAuthStore } from './store/auth'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()

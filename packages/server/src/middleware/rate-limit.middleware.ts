@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import rateLimit, { type Options,type RateLimitRequestHandler } from 'express-rate-limit'
+import rateLimit, { type Options, type RateLimitRequestHandler } from 'express-rate-limit'
 
 import { createLogger } from '../utils/logger'
 

@@ -1,32 +1,33 @@
-import { useEffect, useState } from 'react'
 import {
-  Table,
+  DeleteOutlined,
+  EditOutlined,
+  FileOutlined,
+  FolderOutlined,
+  PlusOutlined,
+  UploadOutlined
+} from '@ant-design/icons'
+import {
+  Avatar,
   Button,
-  Space,
-  Modal,
   Form,
   Input,
-  Select,
-  Tag,
-  message,
-  Popconfirm,
-  Upload,
-  Progress,
-  Tabs,
   List,
-  Avatar
+  message,
+  Modal,
+  Popconfirm,
+  Progress,
+  Select,
+  Space,
+  Table,
+  Tabs,
+  Tag,
+  Upload
 } from 'antd'
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UploadOutlined,
-  FileOutlined,
-  FolderOutlined
-} from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import type { UploadFile } from 'antd/es/upload/interface'
-import { knowledgeBasesApi, departmentsApi, usersApi } from '../services/api'
+import { useEffect, useState } from 'react'
+
+import { departmentsApi, knowledgeBasesApi, usersApi } from '../services/api'
 import { useAuthStore } from '../store/auth'
 
 interface KnowledgeBase {

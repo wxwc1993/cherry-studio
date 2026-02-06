@@ -1,9 +1,8 @@
-import { useCallback, useMemo } from 'react'
-
 import store from '@renderer/store'
 import { useAppSelector } from '@renderer/store'
 import { selectIsAuthenticated, selectIsEnterpriseMode } from '@renderer/store/enterprise'
 import type { Model } from '@renderer/types'
+import { useCallback, useMemo } from 'react'
 
 import { enterpriseApi } from './EnterpriseApi'
 

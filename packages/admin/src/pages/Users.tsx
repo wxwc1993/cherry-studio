@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
-import { Table, Button, Space, Modal, Form, Input, Select, Tag, message, Popconfirm } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Button, Form, Input, message, Modal, Popconfirm, Select, Space, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { usersApi, departmentsApi, rolesApi } from '../services/api'
-import { useAuthStore } from '../store/auth'
 import dayjs from 'dayjs'
+import { useEffect, useState } from 'react'
+
+import { departmentsApi, rolesApi, usersApi } from '../services/api'
+import { useAuthStore } from '../store/auth'
 
 interface User {
   id: string

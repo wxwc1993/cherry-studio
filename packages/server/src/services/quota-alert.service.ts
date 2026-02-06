@@ -81,7 +81,7 @@ class QuotaAlertService {
    * @param total 总配额
    * @returns 是否超限
    */
-  isQuotaExceeded(remaining: number, total: number): boolean {
+  isQuotaExceeded(remaining: number, _total: number): boolean {
     return remaining <= 0
   }
 

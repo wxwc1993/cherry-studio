@@ -1,6 +1,7 @@
+import { ReloadOutlined, SaveOutlined } from '@ant-design/icons'
+import { Alert, Button, Card, Divider, Form, Input, InputNumber, message, Space, Switch, Tabs } from 'antd'
 import { useEffect, useState } from 'react'
-import { Card, Form, Input, InputNumber, Switch, Button, message, Tabs, Divider, Space, Alert } from 'antd'
-import { SaveOutlined, ReloadOutlined } from '@ant-design/icons'
+
 import { adminApi } from '../services/api'
 
 interface SystemSettings {

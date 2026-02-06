@@ -1,6 +1,6 @@
-import { devLoginSchema,feishuLoginSchema, refreshTokenSchema } from '@cherry-studio/enterprise-shared'
+import { devLoginSchema, feishuLoginSchema, refreshTokenSchema } from '@cherry-studio/enterprise-shared'
 import { createSuccessResponse, ERROR_CODES } from '@cherry-studio/enterprise-shared'
-import { and,eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { Router } from 'express'
 
 import { config } from '../config'
@@ -8,7 +8,7 @@ import { authenticate, generateTokens, verifyRefreshToken } from '../middleware/
 import { AppError, AuthenticationError, NotFoundError } from '../middleware/errorHandler'
 import { loginLimiter } from '../middleware/rate-limit.middleware'
 import { validate } from '../middleware/validate'
-import { companies, db, departments,refreshTokens, roles, users } from '../models'
+import { companies, db, departments, refreshTokens, roles, users } from '../models'
 import { createLogger } from '../utils/logger'
 
 const router = Router()

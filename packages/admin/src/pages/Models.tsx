@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Table, Button, Space, Modal, Form, Input, InputNumber, Select, Switch, Tag, message, Popconfirm } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
-import type { ColumnsType } from 'antd/es/table'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import { getProviderOptions, PROVIDER_DISPLAY_NAMES } from '@cherry-studio/enterprise-shared'
-import { modelsApi, departmentsApi, rolesApi } from '../services/api'
+import { Button, Form, Input, InputNumber, message, Modal, Popconfirm, Select, Space, Switch, Table, Tag } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
+import { useEffect, useState } from 'react'
+
+import { departmentsApi, modelsApi, rolesApi } from '../services/api'
 import { useAuthStore } from '../store/auth'
 
 interface Model {

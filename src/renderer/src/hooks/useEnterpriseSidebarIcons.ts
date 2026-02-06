@@ -1,9 +1,8 @@
-import { useMemo } from 'react'
-
 import { ENTERPRISE_DISABLED_ICONS } from '@renderer/config/sidebar'
 import { useAppSelector } from '@renderer/store'
 import { selectIsEnterpriseMode } from '@renderer/store/enterprise'
 import type { SidebarIcon } from '@renderer/types'
+import { useMemo } from 'react'
 
 /**
  * 企业版侧边栏图标过滤 Hook

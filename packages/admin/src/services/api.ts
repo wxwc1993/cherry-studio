@@ -1,5 +1,6 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_PREFIX } from '@cherry-studio/enterprise-shared'
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+
 import { useAuthStore } from '../store/auth'
 
 // Token 刷新队列管理 - 防止并发刷新竞态问题

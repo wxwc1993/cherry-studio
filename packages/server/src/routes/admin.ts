@@ -4,15 +4,16 @@ import {
   companySettingsSchema,
   createBackupSchema,
   createSuccessResponse,
-  restoreBackupSchema} from '@cherry-studio/enterprise-shared'
+  restoreBackupSchema
+} from '@cherry-studio/enterprise-shared'
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { Router } from 'express'
 import Redis from 'ioredis'
 
 import { authenticate, requirePermission } from '../middleware/auth'
-import {NotFoundError } from '../middleware/errorHandler'
+import { NotFoundError } from '../middleware/errorHandler'
 import { validate } from '../middleware/validate'
-import { auditLogs,backups, companies, db } from '../models'
+import { auditLogs, backups, companies, db } from '../models'
 import { backupService } from '../services/backup.service'
 import { getStorageService } from '../services/storage'
 import { createLogger } from '../utils/logger'
@@ -26,7 +27,7 @@ router.use(authenticate)
  * 健康检查
  * GET /admin/health
  */
-router.get('/health', async (req, res, next) => {
+router.get('/health', async (_req, res, _next) => {
   const services: Record<string, 'ok' | 'error'> = {
     database: 'error',
     redis: 'error',

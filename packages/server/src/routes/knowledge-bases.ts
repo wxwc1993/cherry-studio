@@ -8,8 +8,9 @@ import {
   paginationParamsSchema,
   sanitizeFilename,
   searchKnowledgeBaseSchema,
-  updateKnowledgeBaseSchema} from '@cherry-studio/enterprise-shared'
-import { and, desc,eq, sql } from 'drizzle-orm'
+  updateKnowledgeBaseSchema
+} from '@cherry-studio/enterprise-shared'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { Router } from 'express'
 import multer from 'multer'
 import OpenAI from 'openai'
@@ -18,7 +19,7 @@ import { authenticate, requirePermission } from '../middleware/auth'
 import { AuthorizationError, NotFoundError, ValidationError } from '../middleware/errorHandler'
 import { uploadLimiter } from '../middleware/rate-limit.middleware'
 import { validate } from '../middleware/validate'
-import { db,kbDocuments, kbPermissions, knowledgeBases } from '../models'
+import { db, kbDocuments, kbPermissions, knowledgeBases } from '../models'
 import { documentProcessorService } from '../services/document-processor.service'
 import { getStorageService } from '../services/storage'
 import { vectorService } from '../services/vector.service'

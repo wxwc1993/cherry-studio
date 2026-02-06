@@ -1,9 +1,9 @@
-import { createRoleSchema, createSuccessResponse,updateRoleSchema } from '@cherry-studio/enterprise-shared'
-import { desc,eq } from 'drizzle-orm'
+import { createRoleSchema, createSuccessResponse, updateRoleSchema } from '@cherry-studio/enterprise-shared'
+import { desc, eq } from 'drizzle-orm'
 import { Router } from 'express'
 
 import { authenticate, requirePermission } from '../middleware/auth'
-import { AuthorizationError,NotFoundError } from '../middleware/errorHandler'
+import { AuthorizationError, NotFoundError } from '../middleware/errorHandler'
 import { validate } from '../middleware/validate'
 import { db } from '../models/db'
 import { roles } from '../models/schema'

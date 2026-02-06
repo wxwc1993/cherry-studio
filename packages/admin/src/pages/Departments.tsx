@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { Tree, Button, Space, Modal, Form, Input, InputNumber, message, Popconfirm, Card, Empty } from 'antd'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import type { TreeDataNode } from 'antd'
+import { Button, Card, Empty, Form, Input, InputNumber, message, Modal, Popconfirm, Space, Tree } from 'antd'
+import { useEffect, useState } from 'react'
+
 import { departmentsApi } from '../services/api'
 
 interface Department {
