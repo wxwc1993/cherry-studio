@@ -12,33 +12,40 @@ interface OverviewTabProps {
 
 export default function OverviewTab({ loading, usageData }: OverviewTabProps) {
   const summary = useMemo(() => {
-    const requests = usageData.reduce((sum, d) => sum + d.requests, 0)
+    const messages = usageData.reduce((sum, d) => sum + d.messages, 0)
+    const conversations = usageData.reduce((sum, d) => sum + d.conversations, 0)
     const tokens = usageData.reduce((sum, d) => sum + d.tokens, 0)
     const cost = usageData.reduce((sum, d) => sum + d.cost, 0)
-    return { requests, tokens, cost }
+    return { messages, conversations, tokens, cost }
   }, [usageData])
 
   const usageChartOption = useMemo(
     () => ({
       tooltip: { trigger: 'axis' },
-      legend: { data: ['请求数', 'Token 数', '费用'] },
+      legend: { data: ['消息数', '对话数', 'Token 数', '费用'] },
       xAxis: {
         type: 'category',
         data: usageData.map((d) => d.date)
       },
       yAxis: [
-        { type: 'value', name: '请求数 / Token' },
-        { type: 'value', name: '费用 (¥)' }
+        { type: 'value', name: '消息 / 对话' },
+        { type: 'value', name: 'Token / 费用' }
       ],
       series: [
         {
-          name: '请求数',
+          name: '消息数',
           type: 'bar',
-          data: usageData.map((d) => d.requests)
+          data: usageData.map((d) => d.messages)
+        },
+        {
+          name: '对话数',
+          type: 'bar',
+          data: usageData.map((d) => d.conversations)
         },
         {
           name: 'Token 数',
           type: 'line',
+          yAxisIndex: 1,
           data: usageData.map((d) => d.tokens)
         },
         {
@@ -55,17 +62,22 @@ export default function OverviewTab({ loading, usageData }: OverviewTabProps) {
   return (
     <div>
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="总请求数" value={summary.requests} />
+            <Statistic title="总消息数" value={summary.messages} />
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic title="总对话数" value={summary.conversations} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic title="总 Token 数" value={summary.tokens} />
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
+        <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic title="总费用" value={summary.cost} precision={2} prefix="¥" />
           </Card>

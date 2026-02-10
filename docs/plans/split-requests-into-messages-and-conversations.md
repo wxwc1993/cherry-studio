@@ -48,7 +48,7 @@
 | 5 | statistics.ts L180 `requests: count(*)` (/usage) | `requests` | OverviewTab.tsx | L15 reduce, L37 chart data |
 | 6 | statistics.ts L213 response mapping (/usage) | `requests` | OverviewTab.tsx | L24 legend, L30 yAxis, L35 series name, L60 card |
 | 7 | statistics.ts L246 `requests: count(*)` (/models) | `requests` | ModelTab.tsx | L33 pie value, L85 table column |
-| 8 | statistics.ts L280 response mapping (/models) | `requests` | ModelTab.tsx | L107 Card title "模型请求分布" |
+| 8 | statistics.ts L280 response mapping (/models) | `requests` | ModelTab.tsx | L108 Card title "模型请求分布" |
 | 9 | statistics.ts L324 `requests: count(*)` (/users) | `requests` | UserTab.tsx | L15 table column |
 | 10 | statistics.ts L344 response mapping (/users) | `requests` | UserTab.tsx | L15 sorter `a.requests - b.requests` |
 | 11 | statistics.ts L477 `requests: count(*)` (/departments) | `requests` | DepartmentTab.tsx | L47 sort, L64 chart data, L80 table |
@@ -1284,7 +1284,7 @@ L85 表格列 — 拆为两列：
 { title: '对话数', dataIndex: 'conversations', key: 'conversations', sorter: (a, b) => a.conversations - b.conversations },
 ```
 
-L107:
+L108:
 ```typescript
 // 当前: <Card title="模型请求分布" loading={loading}>
 // 改为: <Card title="模型消息分布" loading={loading}>
@@ -1502,78 +1502,724 @@ pnpm i18n:translate  # AI 自动翻译新增/修改的 key
 
 ### Phase 8: 单元测试
 
+> **测试策略**：由于本次变更是全局字段重命名（`requests` → `messages` + `conversations`），不适合严格 TDD（测试先行需要先有接口契约变更）。采用**契约测试**策略：验证变更后的 API 响应结构符合新契约，确保不包含旧字段。
+
 #### Step 8.1: 创建测试目录
 
 ```bash
 mkdir -p packages/server/src/routes/__tests__
 ```
 
-#### Step 8.2: statistics.test.ts
+#### Step 8.2: 编写 statistics.test.ts — 完整测试代码
 
 **文件**: `packages/server/src/routes/__tests__/statistics.test.ts`（新建）
 
-> 当前 server 包已有测试文件（`src/__tests__/`），但多为 placeholder。本步骤为修改后的统计端点新增结构验证测试。
-
-**测试范围**：
-
-| 端点 | 核心断言 |
-|------|---------|
-| `GET /overview` | 响应包含 `usage.{today,month,total}.messages` 和 `.conversations`；不包含 `requests`；不包含顶层 `conversations` 字段 |
-| `GET /usage` | 每条记录包含 `messages` + `conversations`；不包含 `requests` |
-| `GET /models` | 同上 |
-| `GET /users` | 同上 |
-| `GET /departments` | 同上 |
-| `GET /assistant-presets` | 同上 |
-| `GET /export` | CSV headers 末尾包含 `Conversation ID` |
-
-**Mock 策略**：
-
 ```typescript
-// Mock 中间件（跳过认证/鉴权）
+import express from 'express'
+import request from 'supertest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// ────────────────────────────────────────────
+// Mock 层：在真实模块导入前设置
+// ────────────────────────────────────────────
+
+// Mock 认证中间件 — 跳过 JWT 验证，注入测试用户
 vi.mock('../../middleware/auth', () => ({
-  authenticate: (_req: any, _res: any, next: any) => {
-    _req.user = { companyId: 'test-company-id', id: 'test-user-id' }
+  authenticate: (req: any, _res: any, next: any) => {
+    req.user = {
+      id: 'test-user-id',
+      companyId: 'test-company-id',
+      permissions: { statistics: ['read', 'export'] }
+    }
     next()
   },
   requirePermission: () => (_req: any, _res: any, next: any) => next()
 }))
 
-// Mock Drizzle db（返回固定数据）
+// Mock 验证中间件 — 直接透传（参数校验不在本测试范围）
+vi.mock('../../middleware/validate', () => ({
+  validate: () => (req: any, _res: any, next: any) => {
+    // 将 query string 参数保留，模拟 Zod 解析后的 Date 对象
+    if (req.query.startDate) req.query.startDate = new Date(req.query.startDate)
+    if (req.query.endDate) req.query.endDate = new Date(req.query.endDate)
+    next()
+  }
+}))
+
+// Mock 日志 — 静默
+vi.mock('../../utils/logger', () => ({
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
+  })
+}))
+
+// ── Mock 数据工厂 ──
+
+/** /overview 端点返回 7 个并行查询的结果 */
+function createOverviewMockData() {
+  return [
+    [{ count: 100 }],           // totalUsers
+    [{ count: 42 }],            // activeUsers
+    [{ count: 10 }],            // totalModels
+    [{ messages: 500, conversations: 80, tokens: 120000, cost: 35.5 }],  // todayUsage
+    [{ messages: 3200, conversations: 410, tokens: 890000, cost: 256.8 }], // monthUsage
+    [{ messages: 15000, conversations: 2100, tokens: 4500000, cost: 1280.5 }] // totalUsage
+  ]
+}
+
+/** /usage 端点返回趋势数据 */
+function createUsageMockData() {
+  return [
+    { date: '2025-02-01', messages: 120, conversations: 18, tokens: 35000, cost: 10.5, avgLatency: 450 },
+    { date: '2025-02-02', messages: 95, conversations: 14, tokens: 28000, cost: 8.2, avgLatency: 380 }
+  ]
+}
+
+/** /models 端点返回模型统计 */
+function createModelsMockData() {
+  return [
+    { modelId: 'model-1', modelName: 'GPT-4o', messages: 800, conversations: 120, tokens: 250000, cost: 75.0, avgLatency: 500 },
+    { modelId: 'model-2', modelName: 'Claude 3.5', messages: 450, conversations: 65, tokens: 180000, cost: 42.0, avgLatency: 420 }
+  ]
+}
+
+/** /users 端点返回用户统计 */
+function createUsersMockData() {
+  return [
+    { userId: 'user-1', userName: '张三', departmentName: '研发部', messages: 300, conversations: 45, tokens: 90000, cost: 25.0 },
+    { userId: 'user-2', userName: '李四', departmentName: '产品部', messages: 150, conversations: 22, tokens: 45000, cost: 12.5 }
+  ]
+}
+
+/** /departments 端点返回部门统计 */
+function createDepartmentsMockData() {
+  return [
+    { departmentId: 'dept-1', departmentName: '研发部', path: '/研发部', parentId: null, messages: 500, conversations: 70, tokens: 150000, cost: 42.0, userCount: 15 }
+  ]
+}
+
+/** /assistant-presets 端点返回预设统计 */
+function createPresetsMockData() {
+  return [
+    { presetId: 'preset-1', presetName: '翻译助手', emoji: '🌐', messages: 200, conversations: 30, tokens: 60000, cost: 18.0, uniqueUsers: 8 }
+  ]
+}
+
+/** /export 端点返回原始行数据 */
+function createExportMockData() {
+  return [
+    {
+      date: new Date('2025-02-01T10:30:00Z'),
+      userName: '张三',
+      userEmail: 'zhangsan@test.com',
+      departmentName: '研发部',
+      modelName: 'GPT-4o',
+      inputTokens: 500,
+      outputTokens: 1200,
+      totalTokens: 1700,
+      cost: { toFixed: (n: number) => '0.025000' },
+      duration: 450,
+      conversationId: 'conv-abc-123'
+    }
+  ]
+}
+
+// Mock Drizzle db — 通过可切换的 mockResolvedValue 支持不同端点返回不同数据
+let mockQueryResult: any[] = []
+
 vi.mock('../../models', () => {
-  const mockChain = {
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    leftJoin: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    groupBy: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockResolvedValue([/* mock data */])
+  const createChain = () => {
+    const chain: any = {
+      select: vi.fn().mockReturnValue(chain),
+      from: vi.fn().mockReturnValue(chain),
+      leftJoin: vi.fn().mockReturnValue(chain),
+      where: vi.fn().mockReturnValue(chain),
+      groupBy: vi.fn().mockReturnValue(chain),
+      orderBy: vi.fn().mockReturnValue(chain),
+      limit: vi.fn().mockReturnValue(chain),
+      then: vi.fn((resolve: any) => resolve(mockQueryResult))
+    }
+    // 使 chain 可以被 await（thenable）
+    chain[Symbol.for('nodejs.util.promisify.custom')] = undefined
+    return chain
   }
+
+  const chain = createChain()
+
   return {
-    db: mockChain,
-    usageLogs: { /* column refs */ },
-    users: { /* column refs */ },
-    models: { /* column refs */ },
-    departments: { /* column refs */ },
-    assistantPresets: { /* column refs */ }
+    db: {
+      select: vi.fn().mockReturnValue(chain)
+    },
+    usageLogs: {
+      companyId: 'companyId',
+      userId: 'userId',
+      modelId: 'modelId',
+      createdAt: 'createdAt',
+      totalTokens: 'totalTokens',
+      duration: 'duration',
+      cost: 'cost',
+      currency: 'currency',
+      conversationId: 'conversationId',
+      assistantPresetId: 'assistantPresetId',
+      inputTokens: 'inputTokens',
+      outputTokens: 'outputTokens'
+    },
+    users: { id: 'id', companyId: 'companyId', name: 'name', email: 'email' },
+    models: { id: 'id', companyId: 'companyId', displayName: 'displayName' },
+    departments: { id: 'id', name: 'name', path: 'path', parentId: 'parentId' },
+    assistantPresets: { id: 'id', name: 'name', emoji: 'emoji' }
   }
+})
+
+// Mock enterprise-shared — 保留真实 createSuccessResponse
+vi.mock('@cherry-studio/enterprise-shared', async () => {
+  const actual = await vi.importActual<any>('@cherry-studio/enterprise-shared')
+  return {
+    ...actual,
+    usageQuerySchema: {} // validate 中间件已 mock，schema 不参与
+  }
+})
+
+// ── 导入被测模块（必须在 vi.mock 之后） ──
+import statisticsRouter from '../statistics'
+
+// ── 创建 Express 测试应用 ──
+function createApp() {
+  const app = express()
+  app.use(express.json())
+  app.use('/statistics', statisticsRouter)
+  return app
+}
+
+// ────────────────────────────────────────────
+// 测试套件
+// ────────────────────────────────────────────
+
+describe('Statistics Routes — 响应结构契约测试', () => {
+  let app: express.Express
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    app = createApp()
+    mockQueryResult = []
+  })
+
+  // ── 辅助函数 ──
+
+  /** 递归断言对象中不包含 'requests' 键 */
+  function assertNoRequestsField(obj: any, path = '') {
+    if (obj === null || obj === undefined) return
+    if (typeof obj !== 'object') return
+    if (Array.isArray(obj)) {
+      obj.forEach((item, i) => assertNoRequestsField(item, `${path}[${i}]`))
+      return
+    }
+    for (const key of Object.keys(obj)) {
+      expect(key, `字段 '${path}.${key}' 不应为 'requests'`).not.toBe('requests')
+      assertNoRequestsField(obj[key], `${path}.${key}`)
+    }
+  }
+
+  /** 断言用量对象包含 messages + conversations */
+  function assertHasMessagesAndConversations(obj: any, path = '') {
+    expect(obj, `${path} 应包含 messages`).toHaveProperty('messages')
+    expect(obj, `${path} 应包含 conversations`).toHaveProperty('conversations')
+    expect(typeof obj.messages, `${path}.messages 应为 number`).toBe('number')
+    expect(typeof obj.conversations, `${path}.conversations 应为 number`).toBe('number')
+  }
+
+  // ── GET /overview ──
+
+  describe('GET /statistics/overview', () => {
+    it('响应中 usage.today/month/total 应包含 messages 和 conversations', async () => {
+      const overviewData = createOverviewMockData()
+      let callIndex = 0
+      const { db } = await import('../../models')
+      const chain = (db as any).select()
+      chain.then.mockImplementation((resolve: any) => {
+        const result = overviewData[callIndex] || [{}]
+        callIndex++
+        return resolve(result)
+      })
+
+      const res = await request(app).get('/statistics/overview').expect(200)
+
+      const data = res.body.data
+      expect(data).toHaveProperty('users')
+      expect(data).toHaveProperty('models')
+      expect(data).toHaveProperty('usage')
+
+      // 核心断言：不应包含顶层 conversations 字段
+      expect(data).not.toHaveProperty('conversations')
+
+      // 核心断言：usage 三个时段均包含 messages + conversations
+      for (const period of ['today', 'month', 'total']) {
+        assertHasMessagesAndConversations(data.usage[period], `usage.${period}`)
+        expect(data.usage[period]).toHaveProperty('tokens')
+        expect(data.usage[period]).toHaveProperty('cost')
+      }
+
+      // 核心断言：整个响应中无 requests 字段
+      assertNoRequestsField(data)
+    })
+  })
+
+  // ── GET /usage ──
+
+  describe('GET /statistics/usage', () => {
+    it('每条趋势记录应包含 messages 和 conversations，不包含 requests', async () => {
+      mockQueryResult = createUsageMockData()
+
+      const res = await request(app)
+        .get('/statistics/usage')
+        .query({ startDate: '2025-02-01', endDate: '2025-02-28', groupBy: 'day' })
+        .expect(200)
+
+      const data = res.body.data
+      expect(Array.isArray(data)).toBe(true)
+      expect(data.length).toBeGreaterThan(0)
+
+      for (const item of data) {
+        assertHasMessagesAndConversations(item)
+        expect(item).toHaveProperty('date')
+        expect(item).toHaveProperty('tokens')
+        expect(item).toHaveProperty('cost')
+        expect(item).not.toHaveProperty('requests')
+      }
+    })
+  })
+
+  // ── GET /models ──
+
+  describe('GET /statistics/models', () => {
+    it('每条模型统计应包含 messages 和 conversations，不包含 requests', async () => {
+      mockQueryResult = createModelsMockData()
+
+      const res = await request(app)
+        .get('/statistics/models')
+        .query({ startDate: '2025-02-01', endDate: '2025-02-28' })
+        .expect(200)
+
+      const data = res.body.data
+      expect(Array.isArray(data)).toBe(true)
+
+      for (const item of data) {
+        assertHasMessagesAndConversations(item)
+        expect(item).toHaveProperty('modelId')
+        expect(item).toHaveProperty('modelName')
+        expect(item).not.toHaveProperty('requests')
+      }
+    })
+  })
+
+  // ── GET /users ──
+
+  describe('GET /statistics/users', () => {
+    it('每条用户统计应包含 messages 和 conversations，不包含 requests', async () => {
+      mockQueryResult = createUsersMockData()
+
+      const res = await request(app)
+        .get('/statistics/users')
+        .query({ startDate: '2025-02-01', endDate: '2025-02-28' })
+        .expect(200)
+
+      const data = res.body.data
+      expect(Array.isArray(data)).toBe(true)
+
+      for (const item of data) {
+        assertHasMessagesAndConversations(item)
+        expect(item).toHaveProperty('userId')
+        expect(item).toHaveProperty('userName')
+        expect(item).not.toHaveProperty('requests')
+      }
+    })
+  })
+
+  // ── GET /departments ──
+
+  describe('GET /statistics/departments', () => {
+    it('每条部门统计应包含 messages 和 conversations，不包含 requests', async () => {
+      mockQueryResult = createDepartmentsMockData()
+
+      const res = await request(app)
+        .get('/statistics/departments')
+        .query({ startDate: '2025-02-01', endDate: '2025-02-28' })
+        .expect(200)
+
+      const data = res.body.data
+      expect(Array.isArray(data)).toBe(true)
+
+      for (const item of data) {
+        assertHasMessagesAndConversations(item)
+        expect(item).toHaveProperty('departmentId')
+        expect(item).toHaveProperty('departmentName')
+        expect(item).toHaveProperty('userCount')
+        expect(item).not.toHaveProperty('requests')
+      }
+    })
+  })
+
+  // ── GET /assistant-presets ──
+
+  describe('GET /statistics/assistant-presets', () => {
+    it('每条预设统计应包含 messages 和 conversations，不包含 requests', async () => {
+      mockQueryResult = createPresetsMockData()
+
+      const res = await request(app)
+        .get('/statistics/assistant-presets')
+        .query({ startDate: '2025-02-01', endDate: '2025-02-28' })
+        .expect(200)
+
+      const data = res.body.data
+      expect(Array.isArray(data)).toBe(true)
+
+      for (const item of data) {
+        assertHasMessagesAndConversations(item)
+        expect(item).toHaveProperty('presetId')
+        expect(item).toHaveProperty('presetName')
+        expect(item).toHaveProperty('uniqueUsers')
+        expect(item).not.toHaveProperty('requests')
+      }
+    })
+  })
+
+  // ── GET /export ──
+
+  describe('GET /statistics/export', () => {
+    it('CSV headers 应包含 Conversation ID 列', async () => {
+      mockQueryResult = createExportMockData()
+
+      const res = await request(app)
+        .get('/statistics/export')
+        .query({ startDate: '2025-02-01', endDate: '2025-02-28' })
+        .expect(200)
+
+      expect(res.headers['content-type']).toContain('text/csv')
+
+      const csvLines = res.text.split('\n')
+      const headerLine = csvLines[0]
+
+      // 核心断言：CSV 末尾列包含 Conversation ID
+      expect(headerLine).toContain('Conversation ID')
+
+      // 验证数据行包含 conversationId 值
+      if (csvLines.length > 1 && csvLines[1].trim()) {
+        expect(csvLines[1]).toContain('conv-abc-123')
+      }
+    })
+  })
+
+  // ── 数据完整性 ──
+
+  describe('数据语义校验', () => {
+    it('conversations 应 ≤ messages（逻辑约束）', async () => {
+      const overviewData = createOverviewMockData()
+      let callIndex = 0
+      const { db } = await import('../../models')
+      const chain = (db as any).select()
+      chain.then.mockImplementation((resolve: any) => {
+        const result = overviewData[callIndex] || [{}]
+        callIndex++
+        return resolve(result)
+      })
+
+      const res = await request(app).get('/statistics/overview').expect(200)
+      const usage = res.body.data.usage
+
+      for (const period of ['today', 'month', 'total']) {
+        expect(
+          usage[period].conversations,
+          `${period}.conversations (${usage[period].conversations}) 应 ≤ messages (${usage[period].messages})`
+        ).toBeLessThanOrEqual(usage[period].messages)
+      }
+    })
+  })
 })
 ```
 
-**不在测试范围内**：
-- SQL 执行正确性（需集成测试 + 真实 DB）
-- 认证/鉴权逻辑（中间件已 Mock）
-- 性能基准（需真实环境）
+**运行验证**：
+```bash
+cd packages/server && pnpm vitest run src/routes/__tests__/statistics.test.ts
+```
+Expected: 9 个测试全部 PASS
 
-#### Step 8.3: models-usage.test.ts
+#### Step 8.3: 编写 models-usage.test.ts — 完整测试代码
 
 **文件**: `packages/server/src/routes/__tests__/models-usage.test.ts`（新建）
 
-覆盖 `GET /models/:id/usage`，断言 `daily/monthly/total` 包含 `messages` + `conversations`，不包含 `requests`。Mock 策略同 Step 8.2。
+```typescript
+import express from 'express'
+import request from 'supertest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// ────────────────────────────────────────────
+// Mock 层
+// ────────────────────────────────────────────
+
+vi.mock('../../middleware/auth', () => ({
+  authenticate: (req: any, _res: any, next: any) => {
+    req.user = {
+      id: 'test-user-id',
+      companyId: 'test-company-id',
+      permissions: { statistics: ['read'], models: ['read'] }
+    }
+    next()
+  },
+  requirePermission: () => (_req: any, _res: any, next: any) => next()
+}))
+
+vi.mock('../../middleware/validate', () => ({
+  validate: () => (_req: any, _res: any, next: any) => next()
+}))
+
+vi.mock('../../utils/logger', () => ({
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
+  })
+}))
+
+// Mock Prometheus 指标（models.ts 特有依赖）
+vi.mock('../../metrics', () => ({
+  modelCostTotal: { inc: vi.fn() },
+  modelTokensTotal: { inc: vi.fn() }
+}))
+
+// Mock 错误类
+vi.mock('../../middleware/errorHandler', () => ({
+  AppError: class extends Error {},
+  AuthorizationError: class extends Error {},
+  NotFoundError: class extends Error {},
+  QuotaExceededError: class extends Error {}
+}))
+
+// Mock 速率限制
+vi.mock('../../middleware/rate-limit.middleware', () => ({
+  chatLimiter: (_req: any, _res: any, next: any) => next()
+}))
+
+// Mock 数据
+const mockUsageStats = {
+  daily: { messages: 50, conversations: 8, tokens: 15000, cost: 4.5 },
+  monthly: { messages: 320, conversations: 48, tokens: 95000, cost: 28.0 },
+  total: { messages: 1500, conversations: 210, tokens: 450000, cost: 128.0 }
+}
+
+let mockQueryResults: any[][] = []
+let queryCallIndex = 0
+
+vi.mock('../../models', () => {
+  const createChain = () => {
+    const chain: any = {
+      select: vi.fn().mockReturnValue(chain),
+      from: vi.fn().mockReturnValue(chain),
+      leftJoin: vi.fn().mockReturnValue(chain),
+      where: vi.fn().mockReturnValue(chain),
+      groupBy: vi.fn().mockReturnValue(chain),
+      orderBy: vi.fn().mockReturnValue(chain),
+      limit: vi.fn().mockReturnValue(chain),
+      then: vi.fn((resolve: any) => {
+        const result = mockQueryResults[queryCallIndex] || [{}]
+        queryCallIndex++
+        return resolve(result)
+      })
+    }
+    return chain
+  }
+
+  const chain = createChain()
+
+  return {
+    db: {
+      select: vi.fn().mockReturnValue(chain),
+      query: {
+        models: { findFirst: vi.fn(), findMany: vi.fn() },
+        modelPermissions: { findMany: vi.fn() }
+      },
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({ returning: vi.fn() })
+      }),
+      update: vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({ returning: vi.fn() })
+        })
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn()
+      })
+    },
+    usageLogs: {
+      modelId: 'modelId',
+      cost: 'cost',
+      currency: 'currency',
+      conversationId: 'conversationId'
+    },
+    models: { id: 'id', companyId: 'companyId', displayName: 'displayName' },
+    users: { id: 'id' },
+    departments: { id: 'id' },
+    modelPermissions: {},
+    modelPricing: {}
+  }
+})
+
+vi.mock('@cherry-studio/enterprise-shared', async () => {
+  const actual = await vi.importActual<any>('@cherry-studio/enterprise-shared')
+  return {
+    ...actual,
+    // 保留真实的 createSuccessResponse、ERROR_CODES
+    // Mock 掉不需要的 schema
+    batchCreateModelsSchema: {},
+    chatRequestSchema: {},
+    createModelSchema: {},
+    fetchRemoteModelsSchema: {},
+    paginationParamsSchema: {},
+    setPricingSchema: {},
+    updateModelSchema: {}
+  }
+})
+
+import modelsRouter from '../models'
+
+function createApp() {
+  const app = express()
+  app.use(express.json())
+  app.use('/models', modelsRouter)
+  return app
+}
+
+// ────────────────────────────────────────────
+// 测试套件
+// ────────────────────────────────────────────
+
+describe('Models GET /:id/usage — 响应结构契约测试', () => {
+  let app: express.Express
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    queryCallIndex = 0
+    app = createApp()
+
+    // GET /:id/usage 发起 3 个并行查询（daily, monthly, total）
+    mockQueryResults = [
+      [mockUsageStats.daily],
+      [mockUsageStats.monthly],
+      [mockUsageStats.total]
+    ]
+  })
+
+  it('daily/monthly/total 应包含 messages 和 conversations，不包含 requests', async () => {
+    const res = await request(app).get('/models/test-model-id/usage').expect(200)
+
+    const data = res.body.data
+    expect(data).toHaveProperty('daily')
+    expect(data).toHaveProperty('monthly')
+    expect(data).toHaveProperty('total')
+
+    for (const period of ['daily', 'monthly', 'total'] as const) {
+      const stats = data[period]
+
+      // 核心断言：包含新字段
+      expect(stats, `${period} 应包含 messages`).toHaveProperty('messages')
+      expect(stats, `${period} 应包含 conversations`).toHaveProperty('conversations')
+      expect(typeof stats.messages).toBe('number')
+      expect(typeof stats.conversations).toBe('number')
+
+      // 核心断言：不包含旧字段
+      expect(stats, `${period} 不应包含 requests`).not.toHaveProperty('requests')
+
+      // 保留字段
+      expect(stats).toHaveProperty('tokens')
+      expect(stats).toHaveProperty('cost')
+    }
+  })
+
+  it('数据值应正确映射（非零非 NaN）', async () => {
+    const res = await request(app).get('/models/test-model-id/usage').expect(200)
+
+    const { daily, monthly, total } = res.body.data
+
+    expect(daily.messages).toBe(50)
+    expect(daily.conversations).toBe(8)
+    expect(monthly.messages).toBe(320)
+    expect(monthly.conversations).toBe(48)
+    expect(total.messages).toBe(1500)
+    expect(total.conversations).toBe(210)
+  })
+
+  it('conversations 应 ≤ messages（逻辑约束）', async () => {
+    const res = await request(app).get('/models/test-model-id/usage').expect(200)
+
+    for (const period of ['daily', 'monthly', 'total'] as const) {
+      const stats = res.body.data[period]
+      expect(
+        stats.conversations,
+        `${period}: conversations (${stats.conversations}) 应 ≤ messages (${stats.messages})`
+      ).toBeLessThanOrEqual(stats.messages)
+    }
+  })
+
+  it('当无数据时应返回 0 而非 null/undefined', async () => {
+    mockQueryResults = [
+      [{ messages: 0, conversations: 0, tokens: null, cost: null }],
+      [{ messages: 0, conversations: 0, tokens: null, cost: null }],
+      [{ messages: 0, conversations: 0, tokens: null, cost: null }]
+    ]
+
+    const res = await request(app).get('/models/test-model-id/usage').expect(200)
+
+    for (const period of ['daily', 'monthly', 'total'] as const) {
+      const stats = res.body.data[period]
+      expect(stats.messages).toBe(0)
+      expect(stats.conversations).toBe(0)
+      expect(stats.tokens).toBe(0)
+      expect(stats.cost).toBe(0)
+    }
+  })
+})
+```
+
+**运行验证**：
+```bash
+cd packages/server && pnpm vitest run src/routes/__tests__/models-usage.test.ts
+```
+Expected: 4 个测试全部 PASS
+
+#### Step 8.4: 安装 supertest 依赖
+
+> 注意：如果 `packages/server` 尚未安装 `supertest`，需要先安装。
+
+```bash
+cd packages/server && pnpm add -D supertest @types/supertest
+```
+
+**运行验证**：
+```bash
+cd packages/server && pnpm vitest run src/routes/__tests__/
+```
+Expected: 13 个测试全部 PASS（statistics 9 + models-usage 4）
+
+#### Step 8.5: Commit 测试代码
+
+```bash
+git add packages/server/src/routes/__tests__/statistics.test.ts packages/server/src/routes/__tests__/models-usage.test.ts packages/server/package.json packages/server/pnpm-lock.yaml
+git commit --signoff -m "test: add contract tests for statistics and models usage endpoints
+
+Verify response structure after requests → messages + conversations migration.
+13 tests covering all 8 endpoints + data semantic validation."
+```
+
+**不在测试范围内**（需独立的集成测试）：
+- SQL 执行正确性（需真实 PostgreSQL）
+- `COUNT(DISTINCT conversation_id)` 数值精度（需种子数据）
+- 认证/鉴权逻辑（中间件已 Mock）
+- 复合索引查询性能（需 staging 环境基准测试）
 
 ---
 
-### Phase 9: 全量验证
+### Phase 9: 全量验证 + 最终 Commit
 
 #### Step 9.1: 自动化验证
 
@@ -1585,6 +2231,27 @@ pnpm typecheck              # tsgo 类型检查
 pnpm i18n:check             # 翻译文件校验
 pnpm i18n:hardcoded:strict  # 硬编码 UI 字符串检查
 ```
+
+> 如果 lint/format 报错，按 CLAUDE.md 修复顺序：
+> - i18n 排序错误 → `pnpm i18n:sync` → `pnpm build:check`
+> - 格式化错误 → `pnpm format` → `pnpm build:check`
+
+---
+
+## Commit 检查点
+
+每个 Phase 完成后应提交一次，保持原子性：
+
+| Commit | Phase | 消息模板 |
+|--------|-------|---------|
+| #1 | Phase 1 | `feat: add composite index and update UsageSummary type for messages/conversations` |
+| #2 | Phase 2-3 | `feat(server): replace requests with messages + conversations in all statistics endpoints` |
+| #3 | Phase 4-6 | `feat(admin): update dashboard and statistics tabs for messages/conversations` |
+| #4 | Phase 7 | `feat(client): update EnterprisePanel and i18n for messages/conversations` |
+| #5 | Phase 8 | `test: add contract tests for statistics and models usage endpoints` |
+| #6 | Phase 9 | `chore: lint fix and format after messages/conversations migration` |
+
+> 所有 commit 必须带 `--signoff` 标志（CLAUDE.md 规范）。
 
 ---
 
@@ -1655,15 +2322,29 @@ Dashboard 和 OverviewTab 的趋势图中，对话数远小于消息数（1:N �
 
 ## 实施顺序总览
 
-| Phase | Steps | 估计时间 | 说明 |
-|-------|-------|---------|------|
-| Phase 1 | 1.1-1.2 | 5 min | DB 索引 + 共享类型 |
-| Phase 2 | 2.1-2.9 | 15 min | 服务端 statistics.ts（7 端点） |
-| Phase 3 | 3.1 | 5 min | 服务端 models.ts |
-| Phase 4 | 4.1 | 3 min | Admin 类型定义 |
-| Phase 5 | 5.1-5.7 | 15 min | Admin Dashboard（接口+图表+卡片） |
-| Phase 6 | 6.1-6.6 | 15 min | Admin Statistics 5 Tab + 清理日志 |
-| Phase 7 | 7.1-7.5 | 10 min | 客户端 + i18n |
-| Phase 8 | 8.1-8.3 | 20 min | 单元测试 |
-| Phase 9 | 9.1 | 5 min | 全量验证 |
-| **合计** | **30 步** | **~90 min** | |
+| Phase | Steps | 估计时间 | Commit |
+|-------|-------|---------|--------|
+| Phase 1 | 1.1-1.2 | 5 min | #1 `feat: add composite index and update UsageSummary type` |
+| Phase 2 | 2.1-2.9 | 15 min | #2 (与 Phase 3 合并) |
+| Phase 3 | 3.1 | 5 min | #2 `feat(server): replace requests with messages + conversations` |
+| Phase 4 | 4.1 | 3 min | #3 (与 Phase 5-6 合并) |
+| Phase 5 | 5.1-5.7 | 15 min | #3 (合并中) |
+| Phase 6 | 6.1-6.6 | 15 min | #3 `feat(admin): update dashboard and statistics tabs` |
+| Phase 7 | 7.1-7.5 | 10 min | #4 `feat(client): update EnterprisePanel and i18n` |
+| Phase 8 | 8.1-8.5 | 25 min | #5 `test: add contract tests for statistics endpoints` |
+| Phase 9 | 9.1 | 5 min | #6 `chore: lint fix and format` |
+| **合计** | **33 步** | **~100 min** | **6 commits** |
+
+---
+
+## 执行选项
+
+计划已保存。两种执行方式可选：
+
+**1. Subagent-Driven（当前会话）** — 在本会话中逐 Task 调度子 Agent 执行，每个 Task 完成后自动 code review，快速迭代。
+- **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
+
+**2. Parallel Session（独立会话）** — 在 worktree 中开启新会话，批量执行 + checkpoint 复查。
+- **REQUIRED SUB-SKILL:** 新会话使用 superpowers:executing-plans
+
+推荐选项 1（Subagent-Driven），因为本变更涉及三端协同，需要在同一会话中保持上下文一致性。

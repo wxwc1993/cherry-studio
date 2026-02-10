@@ -256,7 +256,8 @@ export interface UsageSummary {
   userId?: string
   modelId?: string
   departmentId?: string
-  totalRequests: number
+  totalMessages: number
+  totalConversations: number
   totalTokens: number
   totalCost: number
   averageLatency: number

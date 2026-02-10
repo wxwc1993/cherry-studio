@@ -10,17 +10,17 @@ import { ECHARTS_THEME_NAME } from '../theme'
 interface OverviewData {
   users: { total: number; active: number }
   models: number
-  conversations: number
   usage: {
-    today: { requests: number; tokens: number; cost: number }
-    month: { requests: number; tokens: number; cost: number }
-    total: { requests: number; tokens: number; cost: number }
+    today: { messages: number; conversations: number; tokens: number; cost: number }
+    month: { messages: number; conversations: number; tokens: number; cost: number }
+    total: { messages: number; conversations: number; tokens: number; cost: number }
   }
 }
 
 interface UsageTrend {
   date: string
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
 }
@@ -28,7 +28,8 @@ interface UsageTrend {
 interface DepartmentStat {
   departmentId: string
   departmentName: string
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
   userCount: number
@@ -38,7 +39,8 @@ interface PresetStat {
   presetId: string
   presetName: string
   emoji: string | null
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
   uniqueUsers: number
@@ -47,7 +49,8 @@ interface PresetStat {
 interface ModelStat {
   modelId: string | null
   modelName: string
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
 }
@@ -100,21 +103,21 @@ export default function Dashboard() {
       trigger: 'axis'
     },
     legend: {
-      data: ['请求数', 'Token 数']
+      data: ['消息数', '对话数', 'Token 数']
     },
     xAxis: {
       type: 'category',
       data: usageTrend.map((d) => d.date)
     },
     yAxis: [
-      { type: 'value', name: '请求数' },
+      { type: 'value', name: '消息 / 对话' },
       { type: 'value', name: 'Token 数' }
     ],
     series: [
       {
-        name: '请求数',
+        name: '消息数',
         type: 'bar',
-        data: usageTrend.map((d) => d.requests),
+        data: usageTrend.map((d) => d.messages),
         itemStyle: {
           color: {
             type: 'linear',
@@ -125,6 +128,24 @@ export default function Dashboard() {
             colorStops: [
               { offset: 0, color: '#6366f1' },
               { offset: 1, color: 'rgba(99,102,241,0.2)' }
+            ]
+          }
+        }
+      },
+      {
+        name: '对话数',
+        type: 'bar',
+        data: usageTrend.map((d) => d.conversations),
+        itemStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: '#10b981' },
+              { offset: 1, color: 'rgba(16,185,129,0.2)' }
             ]
           }
         }
@@ -170,7 +191,7 @@ export default function Dashboard() {
     series: [
       {
         type: 'bar',
-        data: [...topDepartments].reverse().map((d) => d.requests),
+        data: [...topDepartments].reverse().map((d) => d.messages),
         itemStyle: {
           color: {
             type: 'linear',
@@ -213,7 +234,7 @@ export default function Dashboard() {
         center: ['60%', '50%'],
         data: modelStats.slice(0, 8).map((m) => ({
           name: m.modelName,
-          value: m.requests
+          value: m.messages
         })),
         label: {
           show: false
@@ -252,8 +273,8 @@ export default function Dashboard() {
       color: STAT_COLORS[1]
     },
     {
-      title: '今日请求',
-      value: overview?.usage.today.requests || 0,
+      title: '今日消息',
+      value: overview?.usage.today.messages || 0,
       icon: <MessageOutlined />,
       color: STAT_COLORS[2]
     },
@@ -294,13 +315,13 @@ export default function Dashboard() {
           <Card title="本月统计">
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <Statistic title="请求总数" value={overview?.usage.month.requests || 0} />
+                <Statistic title="消息总数" value={overview?.usage.month.messages || 0} />
               </Col>
               <Col span={12}>
                 <Statistic title="Token 总数" value={overview?.usage.month.tokens || 0} />
               </Col>
               <Col span={12}>
-                <Statistic title="请求总数" value={overview?.conversations || 0} />
+                <Statistic title="对话总数" value={overview?.usage.month.conversations || 0} />
               </Col>
               <Col span={12}>
                 <Statistic title="总费用" value={overview?.usage.total.cost || 0} precision={2} prefix="¥" />
@@ -312,7 +333,7 @@ export default function Dashboard() {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={8}>
-          <Card title="部门 Top 5 (请求量)">
+          <Card title="部门 Top 5 (消息量)">
             {topDepartments.length > 0 ? (
               <ReactECharts theme={ECHARTS_THEME_NAME} option={departmentBarOption} style={{ height: 260 }} />
             ) : (
@@ -370,7 +391,7 @@ export default function Dashboard() {
                       {item.presetName}
                     </span>
                     <span style={{ color: 'var(--cs-text-3)', fontSize: 12 }}>
-                      {item.requests} 次 · {item.uniqueUsers} 用户
+                      {item.messages} 次 · {item.uniqueUsers} 用户
                     </span>
                   </List.Item>
                 )}

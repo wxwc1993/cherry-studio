@@ -2,7 +2,8 @@ import type { Dayjs } from 'dayjs'
 
 export interface UsageData {
   date: string
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
   avgLatency?: number
@@ -11,7 +12,8 @@ export interface UsageData {
 export interface ModelUsage {
   modelId: string | null
   modelName: string
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
   avgLatency?: number
@@ -21,7 +23,8 @@ export interface UserUsage {
   userId: string
   userName: string
   department: string
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
 }
@@ -31,7 +34,8 @@ export interface DepartmentUsage {
   departmentName: string
   path: string
   parentId: string | null
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
   userCount: number
@@ -41,7 +45,8 @@ export interface PresetUsage {
   presetId: string
   presetName: string
   emoji: string | null
-  requests: number
+  messages: number
+  conversations: number
   tokens: number
   cost: number
   uniqueUsers: number

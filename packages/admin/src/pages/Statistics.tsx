@@ -75,14 +75,6 @@ export default function Statistics() {
         statisticsApi.byAssistantPreset(params)
       ])
 
-      // [DEBUG] 调试仪表盘图表无数据问题，调试完成后移除
-      console.warn('[DEBUG] Statistics params:', params)
-      console.warn('[DEBUG] usage:', usageRes.data.data?.length, usageRes.data.data?.slice(0, 2))
-      console.warn('[DEBUG] models:', modelRes.data.data?.length, modelRes.data.data?.slice(0, 2))
-      console.warn('[DEBUG] users:', userRes.data.data?.length, userRes.data.data?.slice(0, 2))
-      console.warn('[DEBUG] departments:', deptRes.data.data?.length, deptRes.data.data?.slice(0, 2))
-      console.warn('[DEBUG] presets:', presetRes.data.data?.length, presetRes.data.data?.slice(0, 2))
-
       setUsageData(usageRes.data.data)
       setModelUsage(modelRes.data.data)
       setUserUsage(userRes.data.data)

@@ -31,7 +31,7 @@ export default function PresetTab({ loading, presetData }: PresetTabProps) {
           center: ['60%', '50%'],
           data: presetData.slice(0, 10).map((p) => ({
             name: p.emoji ? `${p.emoji} ${p.presetName}` : p.presetName,
-            value: p.requests
+            value: p.messages
           })),
           label: { show: false },
           emphasis: {
@@ -59,7 +59,13 @@ export default function PresetTab({ loading, presetData }: PresetTabProps) {
         </span>
       )
     },
-    { title: '请求数', dataIndex: 'requests', key: 'requests', sorter: (a, b) => a.requests - b.requests },
+    { title: '消息数', dataIndex: 'messages', key: 'messages', sorter: (a, b) => a.messages - b.messages },
+    {
+      title: '对话数',
+      dataIndex: 'conversations',
+      key: 'conversations',
+      sorter: (a, b) => a.conversations - b.conversations
+    },
     { title: 'Token 数', dataIndex: 'tokens', key: 'tokens', sorter: (a, b) => a.tokens - b.tokens },
     {
       title: '费用',
@@ -102,7 +108,7 @@ export default function PresetTab({ loading, presetData }: PresetTabProps) {
                       {item.presetName}
                     </span>
                     <span style={{ color: 'var(--cs-text-3)', fontSize: 12 }}>
-                      {item.requests} 次 · {item.uniqueUsers} 用户 · {item.tokens} tokens
+                      {item.messages} 次 · {item.uniqueUsers} 用户 · {item.tokens} tokens
                     </span>
                   </List.Item>
                 )}

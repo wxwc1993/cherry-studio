@@ -8,9 +8,11 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 interface UsageStats {
-  todayRequests: number
+  todayMessages: number
+  todayConversations: number
   todayTokens: number
-  monthRequests: number
+  monthMessages: number
+  monthConversations: number
   monthTokens: number
 }
 
@@ -35,14 +37,16 @@ export default function EnterprisePanel() {
       const response = await enterpriseApi.getUsageStats()
       const data = response.data as {
         usage?: {
-          today?: { requests?: number; tokens?: number }
-          month?: { requests?: number; tokens?: number }
+          today?: { messages?: number; conversations?: number; tokens?: number }
+          month?: { messages?: number; conversations?: number; tokens?: number }
         }
       }
       setStats({
-        todayRequests: data.usage?.today?.requests || 0,
+        todayMessages: data.usage?.today?.messages || 0,
+        todayConversations: data.usage?.today?.conversations || 0,
         todayTokens: data.usage?.today?.tokens || 0,
-        monthRequests: data.usage?.month?.requests || 0,
+        monthMessages: data.usage?.month?.messages || 0,
+        monthConversations: data.usage?.month?.conversations || 0,
         monthTokens: data.usage?.month?.tokens || 0
       })
     } catch {
@@ -138,16 +142,24 @@ export default function EnterprisePanel() {
                   <SectionTitle>{t('settings.enterprise.usageStats')}</SectionTitle>
                   <StatGrid>
                     <StatCard>
-                      <StatValue>{stats.todayRequests}</StatValue>
-                      <StatLabel>{t('settings.enterprise.stats.todayRequests')}</StatLabel>
+                      <StatValue>{stats.todayMessages}</StatValue>
+                      <StatLabel>{t('settings.enterprise.stats.todayMessages')}</StatLabel>
+                    </StatCard>
+                    <StatCard>
+                      <StatValue>{stats.todayConversations}</StatValue>
+                      <StatLabel>{t('settings.enterprise.stats.todayConversations')}</StatLabel>
                     </StatCard>
                     <StatCard>
                       <StatValue>{(stats.todayTokens / 1000).toFixed(1)}K</StatValue>
                       <StatLabel>{t('settings.enterprise.stats.todayTokens')}</StatLabel>
                     </StatCard>
                     <StatCard>
-                      <StatValue>{stats.monthRequests}</StatValue>
-                      <StatLabel>{t('settings.enterprise.stats.monthRequests')}</StatLabel>
+                      <StatValue>{stats.monthMessages}</StatValue>
+                      <StatLabel>{t('settings.enterprise.stats.monthMessages')}</StatLabel>
+                    </StatCard>
+                    <StatCard>
+                      <StatValue>{stats.monthConversations}</StatValue>
+                      <StatLabel>{t('settings.enterprise.stats.monthConversations')}</StatLabel>
                     </StatCard>
                     <StatCard>
                       <StatValue>{(stats.monthTokens / 1000).toFixed(1)}K</StatValue>
@@ -271,7 +283,7 @@ const Badge = styled.span<{ type: 'success' | 'warning' | 'error' }>`
 
 const StatGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 `
 

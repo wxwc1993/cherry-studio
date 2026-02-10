@@ -519,7 +519,8 @@ router.get('/:id/usage', requirePermission('statistics', 'read'), async (req, re
     const [dailyStats, monthlyStats, totalStats] = await Promise.all([
       db
         .select({
-          requests: sql<number>`count(*)`,
+          messages: sql<number>`count(*)`.mapWith(Number),
+          conversations: sql<number>`count(distinct ${usageLogs.conversationId})`.mapWith(Number),
           tokens: sql<number>`sum(total_tokens)`,
           cost: costCnySql
         })
@@ -528,7 +529,8 @@ router.get('/:id/usage', requirePermission('statistics', 'read'), async (req, re
 
       db
         .select({
-          requests: sql<number>`count(*)`,
+          messages: sql<number>`count(*)`.mapWith(Number),
+          conversations: sql<number>`count(distinct ${usageLogs.conversationId})`.mapWith(Number),
           tokens: sql<number>`sum(total_tokens)`,
           cost: costCnySql
         })
@@ -537,7 +539,8 @@ router.get('/:id/usage', requirePermission('statistics', 'read'), async (req, re
 
       db
         .select({
-          requests: sql<number>`count(*)`,
+          messages: sql<number>`count(*)`.mapWith(Number),
+          conversations: sql<number>`count(distinct ${usageLogs.conversationId})`.mapWith(Number),
           tokens: sql<number>`sum(total_tokens)`,
           cost: costCnySql
         })
@@ -548,17 +551,20 @@ router.get('/:id/usage', requirePermission('statistics', 'read'), async (req, re
     res.json(
       createSuccessResponse({
         daily: {
-          requests: Number(dailyStats[0].requests || 0),
+          messages: Number(dailyStats[0].messages || 0),
+          conversations: Number(dailyStats[0].conversations || 0),
           tokens: Number(dailyStats[0].tokens || 0),
           cost: Number(dailyStats[0].cost || 0)
         },
         monthly: {
-          requests: Number(monthlyStats[0].requests || 0),
+          messages: Number(monthlyStats[0].messages || 0),
+          conversations: Number(monthlyStats[0].conversations || 0),
           tokens: Number(monthlyStats[0].tokens || 0),
           cost: Number(monthlyStats[0].cost || 0)
         },
         total: {
-          requests: Number(totalStats[0].requests || 0),
+          messages: Number(totalStats[0].messages || 0),
+          conversations: Number(totalStats[0].conversations || 0),
           tokens: Number(totalStats[0].tokens || 0),
           cost: Number(totalStats[0].cost || 0)
         }

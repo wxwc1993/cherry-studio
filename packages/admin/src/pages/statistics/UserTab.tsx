@@ -12,7 +12,13 @@ export default function UserTab({ loading, userData }: UserTabProps) {
   const columns: ColumnsType<UserUsage> = [
     { title: '用户', dataIndex: 'userName', key: 'userName' },
     { title: '部门', dataIndex: 'department', key: 'department' },
-    { title: '请求数', dataIndex: 'requests', key: 'requests', sorter: (a, b) => a.requests - b.requests },
+    { title: '消息数', dataIndex: 'messages', key: 'messages', sorter: (a, b) => a.messages - b.messages },
+    {
+      title: '对话数',
+      dataIndex: 'conversations',
+      key: 'conversations',
+      sorter: (a, b) => a.conversations - b.conversations
+    },
     { title: 'Token 数', dataIndex: 'tokens', key: 'tokens', sorter: (a, b) => a.tokens - b.tokens },
     {
       title: '费用',

@@ -355,7 +355,8 @@ export const usageLogs = pgTable(
     index('usage_logs_user_id_idx').on(table.userId),
     index('usage_logs_model_id_idx').on(table.modelId),
     index('usage_logs_created_at_idx').on(table.createdAt),
-    index('usage_logs_assistant_preset_id_idx').on(table.assistantPresetId)
+    index('usage_logs_assistant_preset_id_idx').on(table.assistantPresetId),
+    index('usage_logs_company_created_conversation_idx').on(table.companyId, table.createdAt, table.conversationId)
   ]
 )
 

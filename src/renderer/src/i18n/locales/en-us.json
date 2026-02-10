@@ -4206,9 +4206,11 @@
       "role": "Role",
       "server": "Server",
       "stats": {
-        "monthRequests": "Monthly Requests",
+        "monthConversations": "Monthly Conversations",
+        "monthMessages": "Monthly Messages",
         "monthTokens": "Monthly Tokens",
-        "todayRequests": "Today's Requests",
+        "todayConversations": "Today's Conversations",
+        "todayMessages": "Today's Messages",
         "todayTokens": "Today's Tokens"
       },
       "status": {

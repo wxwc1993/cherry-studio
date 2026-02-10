@@ -30,7 +30,7 @@ export default function ModelTab({ loading, modelData }: ModelTabProps) {
           center: ['60%', '50%'],
           data: modelData.map((m) => ({
             name: m.modelName,
-            value: m.requests
+            value: m.messages
           })),
           label: { show: false },
           emphasis: {
@@ -82,7 +82,13 @@ export default function ModelTab({ loading, modelData }: ModelTabProps) {
 
   const columns: ColumnsType<ModelUsage> = [
     { title: '模型', dataIndex: 'modelName', key: 'modelName' },
-    { title: '请求数', dataIndex: 'requests', key: 'requests', sorter: (a, b) => a.requests - b.requests },
+    { title: '消息数', dataIndex: 'messages', key: 'messages', sorter: (a, b) => a.messages - b.messages },
+    {
+      title: '对话数',
+      dataIndex: 'conversations',
+      key: 'conversations',
+      sorter: (a, b) => a.conversations - b.conversations
+    },
     { title: 'Token 数', dataIndex: 'tokens', key: 'tokens', sorter: (a, b) => a.tokens - b.tokens },
     {
       title: '费用',
@@ -104,7 +110,7 @@ export default function ModelTab({ loading, modelData }: ModelTabProps) {
     <div>
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="模型请求分布" loading={loading}>
+          <Card title="模型消息分布" loading={loading}>
             {modelData.length > 0 ? (
               <ReactECharts theme={ECHARTS_THEME_NAME} option={pieOption} style={{ height: 350 }} />
             ) : (

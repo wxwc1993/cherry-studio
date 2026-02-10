@@ -31,6 +31,7 @@ function toEndOfDayUTC(date: Date): Date {
  * USD 按固定汇率 $1 = ¥7 转换
  */
 const costCnySql = sql<number>`sum(CASE WHEN ${usageLogs.currency} = 'USD' THEN ${usageLogs.cost} * 7 ELSE ${usageLogs.cost} END)`
+const conversationCountSql = sql<number>`count(distinct ${usageLogs.conversationId})`.mapWith(Number)
 
 router.use(authenticate)
 router.use(requirePermission('statistics', 'read'))
@@ -47,62 +48,58 @@ router.get('/overview', async (req, res, next) => {
     const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
     const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0))
 
-    const [totalUsers, activeUsers, totalModels, totalConversations, todayUsage, monthUsage, totalUsage] =
-      await Promise.all([
-        // 总用户数
-        db
-          .select({ count: sql<number>`count(*)` })
-          .from(users)
-          .where(eq(users.companyId, companyId)),
+    const [totalUsers, activeUsers, totalModels, todayUsage, monthUsage, totalUsage] = await Promise.all([
+      // 总用户数
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(eq(users.companyId, companyId)),
 
-        // 本月活跃用户数
-        db
-          .select({ count: sql<number>`count(distinct user_id)` })
-          .from(usageLogs)
-          .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, monthStart))),
+      // 本月活跃用户数
+      db
+        .select({ count: sql<number>`count(distinct user_id)` })
+        .from(usageLogs)
+        .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, monthStart))),
 
-        // 模型数
-        db
-          .select({ count: sql<number>`count(*)` })
-          .from(models)
-          .where(eq(models.companyId, companyId)),
+      // 模型数
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(models)
+        .where(eq(models.companyId, companyId)),
 
-        // 请求总数（替代原来查空的 conversations 表）
-        db
-          .select({ count: sql<number>`count(*)` })
-          .from(usageLogs)
-          .where(eq(usageLogs.companyId, companyId)),
+      // 今日用量
+      db
+        .select({
+          messages: sql<number>`count(*)`.mapWith(Number),
+          conversations: conversationCountSql,
+          tokens: sql<number>`sum(total_tokens)`,
+          cost: costCnySql
+        })
+        .from(usageLogs)
+        .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, today))),
 
-        // 今日用量
-        db
-          .select({
-            requests: sql<number>`count(*)`,
-            tokens: sql<number>`sum(total_tokens)`,
-            cost: costCnySql
-          })
-          .from(usageLogs)
-          .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, today))),
+      // 本月用量
+      db
+        .select({
+          messages: sql<number>`count(*)`.mapWith(Number),
+          conversations: conversationCountSql,
+          tokens: sql<number>`sum(total_tokens)`,
+          cost: costCnySql
+        })
+        .from(usageLogs)
+        .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, monthStart))),
 
-        // 本月用量
-        db
-          .select({
-            requests: sql<number>`count(*)`,
-            tokens: sql<number>`sum(total_tokens)`,
-            cost: costCnySql
-          })
-          .from(usageLogs)
-          .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, monthStart))),
-
-        // 总用量
-        db
-          .select({
-            requests: sql<number>`count(*)`,
-            tokens: sql<number>`sum(total_tokens)`,
-            cost: costCnySql
-          })
-          .from(usageLogs)
-          .where(eq(usageLogs.companyId, companyId))
-      ])
+      // 总用量
+      db
+        .select({
+          messages: sql<number>`count(*)`.mapWith(Number),
+          conversations: conversationCountSql,
+          tokens: sql<number>`sum(total_tokens)`,
+          cost: costCnySql
+        })
+        .from(usageLogs)
+        .where(eq(usageLogs.companyId, companyId))
+    ])
 
     res.json(
       createSuccessResponse({
@@ -111,20 +108,22 @@ router.get('/overview', async (req, res, next) => {
           active: Number(activeUsers[0].count)
         },
         models: Number(totalModels[0].count),
-        conversations: Number(totalConversations[0].count),
         usage: {
           today: {
-            requests: Number(todayUsage[0].requests || 0),
+            messages: Number(todayUsage[0].messages || 0),
+            conversations: Number(todayUsage[0].conversations || 0),
             tokens: Number(todayUsage[0].tokens || 0),
             cost: Number(todayUsage[0].cost || 0)
           },
           month: {
-            requests: Number(monthUsage[0].requests || 0),
+            messages: Number(monthUsage[0].messages || 0),
+            conversations: Number(monthUsage[0].conversations || 0),
             tokens: Number(monthUsage[0].tokens || 0),
             cost: Number(monthUsage[0].cost || 0)
           },
           total: {
-            requests: Number(totalUsage[0].requests || 0),
+            messages: Number(totalUsage[0].messages || 0),
+            conversations: Number(totalUsage[0].conversations || 0),
             tokens: Number(totalUsage[0].tokens || 0),
             cost: Number(totalUsage[0].cost || 0)
           }
@@ -177,7 +176,8 @@ router.get('/usage', validate(usageQuerySchema, 'query'), async (req, res, next)
     let query = db
       .select({
         date: sql<string>`${sql.raw(groupByClause)}::date`,
-        requests: sql<number>`count(*)`,
+        messages: sql<number>`count(*)`.mapWith(Number),
+        conversations: conversationCountSql,
         tokens: sql<number>`sum(${usageLogs.totalTokens})`,
         cost: costCnySql,
         avgLatency: sql<number>`avg(${usageLogs.duration})`
@@ -210,7 +210,8 @@ router.get('/usage', validate(usageQuerySchema, 'query'), async (req, res, next)
       createSuccessResponse(
         result.map((r: any) => ({
           date: r.date,
-          requests: Number(r.requests),
+          messages: Number(r.messages),
+          conversations: Number(r.conversations || 0),
           tokens: Number(r.tokens || 0),
           cost: Number(r.cost || 0),
           avgLatency: Math.round(Number(r.avgLatency || 0))
@@ -243,7 +244,8 @@ router.get('/models', validate(usageQuerySchema, 'query'), async (req, res, next
       .select({
         modelId: usageLogs.modelId,
         modelName: sql<string>`COALESCE(${models.displayName}, '已删除模型')`,
-        requests: sql<number>`count(*)`,
+        messages: sql<number>`count(*)`.mapWith(Number),
+        conversations: conversationCountSql,
         tokens: sql<number>`sum(${usageLogs.totalTokens})`,
         cost: costCnySql,
         avgLatency: sql<number>`avg(${usageLogs.duration})`
@@ -277,7 +279,8 @@ router.get('/models', validate(usageQuerySchema, 'query'), async (req, res, next
         result.map((r: any) => ({
           modelId: r.modelId,
           modelName: r.modelName ?? '已删除模型',
-          requests: Number(r.requests),
+          messages: Number(r.messages),
+          conversations: Number(r.conversations || 0),
           tokens: Number(r.tokens || 0),
           cost: Number(r.cost || 0),
           avgLatency: Math.round(Number(r.avgLatency || 0))
@@ -321,7 +324,8 @@ router.get('/users', validate(usageQuerySchema, 'query'), async (req, res, next)
         userId: usageLogs.userId,
         userName: users.name,
         departmentName: departments.name,
-        requests: sql<number>`count(*)`,
+        messages: sql<number>`count(*)`.mapWith(Number),
+        conversations: conversationCountSql,
         tokens: sql<number>`sum(${usageLogs.totalTokens})`,
         cost: costCnySql
       })
@@ -341,7 +345,8 @@ router.get('/users', validate(usageQuerySchema, 'query'), async (req, res, next)
           userId: r.userId,
           userName: r.userName ?? '未知用户',
           department: r.departmentName ?? '未分配部门',
-          requests: Number(r.requests),
+          messages: Number(r.messages),
+          conversations: Number(r.conversations || 0),
           tokens: Number(r.tokens || 0),
           cost: Number(r.cost || 0)
         }))
@@ -392,7 +397,8 @@ router.get(
           outputTokens: usageLogs.outputTokens,
           totalTokens: usageLogs.totalTokens,
           cost: sql<number>`CASE WHEN ${usageLogs.currency} = 'USD' THEN ${usageLogs.cost} * 7 ELSE ${usageLogs.cost} END`,
-          duration: usageLogs.duration
+          duration: usageLogs.duration,
+          conversationId: usageLogs.conversationId
         })
         .from(usageLogs)
         .leftJoin(users, eq(usageLogs.userId, users.id))
@@ -412,7 +418,8 @@ router.get(
         'Output Tokens',
         'Total Tokens',
         'Cost',
-        'Duration (ms)'
+        'Duration (ms)',
+        'Conversation ID'
       ]
       const rows = result.map((r) => [
         r.date.toISOString(),
@@ -424,7 +431,8 @@ router.get(
         r.outputTokens,
         r.totalTokens,
         r.cost.toFixed(6),
-        r.duration
+        r.duration,
+        r.conversationId ?? ''
       ])
 
       const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
@@ -474,7 +482,8 @@ router.get('/departments', validate(usageQuerySchema, 'query'), async (req, res,
         departmentName: departments.name,
         path: departments.path,
         parentId: departments.parentId,
-        requests: sql<number>`count(*)`,
+        messages: sql<number>`count(*)`.mapWith(Number),
+        conversations: conversationCountSql,
         tokens: sql<number>`sum(${usageLogs.totalTokens})`,
         cost: costCnySql,
         userCount: sql<number>`count(distinct ${usageLogs.userId})`
@@ -495,7 +504,8 @@ router.get('/departments', validate(usageQuerySchema, 'query'), async (req, res,
           departmentName: r.departmentName,
           path: r.path,
           parentId: r.parentId,
-          requests: Number(r.requests),
+          messages: Number(r.messages),
+          conversations: Number(r.conversations || 0),
           tokens: Number(r.tokens || 0),
           cost: Number(r.cost || 0),
           userCount: Number(r.userCount)
@@ -530,7 +540,8 @@ router.get('/assistant-presets', validate(usageQuerySchema, 'query'), async (req
         presetId: usageLogs.assistantPresetId,
         presetName: assistantPresets.name,
         emoji: assistantPresets.emoji,
-        requests: sql<number>`count(*)`,
+        messages: sql<number>`count(*)`.mapWith(Number),
+        conversations: conversationCountSql,
         tokens: sql<number>`sum(${usageLogs.totalTokens})`,
         cost: costCnySql,
         uniqueUsers: sql<number>`count(distinct ${usageLogs.userId})`
@@ -566,7 +577,8 @@ router.get('/assistant-presets', validate(usageQuerySchema, 'query'), async (req
           presetId: r.presetId,
           presetName: r.presetName ?? '已删除预设',
           emoji: r.emoji,
-          requests: Number(r.requests),
+          messages: Number(r.messages),
+          conversations: Number(r.conversations || 0),
           tokens: Number(r.tokens || 0),
           cost: Number(r.cost || 0),
           uniqueUsers: Number(r.uniqueUsers)

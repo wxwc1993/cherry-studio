@@ -4206,9 +4206,11 @@
       "role": "角色",
       "server": "服务器",
       "stats": {
-        "monthRequests": "本月请求",
+        "monthConversations": "本月对话",
+        "monthMessages": "本月消息",
         "monthTokens": "本月 Token",
-        "todayRequests": "今日请求",
+        "todayConversations": "今日对话",
+        "todayMessages": "今日消息",
         "todayTokens": "今日 Token"
       },
       "status": {

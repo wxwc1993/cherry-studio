@@ -4206,9 +4206,11 @@
       "role": "[to be translated]:Role",
       "server": "[to be translated]:Server",
       "stats": {
-        "monthRequests": "[to be translated]:Monthly Requests",
+        "monthConversations": "[to be translated]:Monthly Conversations",
+        "monthMessages": "[to be translated]:Monthly Messages",
         "monthTokens": "[to be translated]:Monthly Tokens",
-        "todayRequests": "[to be translated]:Today's Requests",
+        "todayConversations": "[to be translated]:Today's Conversations",
+        "todayMessages": "[to be translated]:Today's Messages",
         "todayTokens": "[to be translated]:Today's Tokens"
       },
       "status": {
