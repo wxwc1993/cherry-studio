@@ -85,6 +85,11 @@ export const ENTERPRISE_PROVIDER_IDS = {
 export type EnterpriseProviderId = keyof typeof ENTERPRISE_PROVIDER_IDS
 
 /**
+ * 自定义供应商哨兵值，用于 Admin 下拉选择中标识"自定义（OpenAI 兼容）"选项
+ */
+export const CUSTOM_PROVIDER_SENTINEL = '__custom__' as const
+
+/**
  * 供应商显示名称映射
  */
 export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
@@ -164,12 +169,14 @@ export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
  * 获取所有供应商选项列表（用于 Admin 下拉选择）
  */
 export function getProviderOptions(): Array<{ label: string; value: string }> {
-  return Object.keys(ENTERPRISE_PROVIDER_IDS)
+  const systemOptions = Object.keys(ENTERPRISE_PROVIDER_IDS)
     .map((id) => ({
       label: PROVIDER_DISPLAY_NAMES[id] || id,
       value: id
     }))
     .sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'))
+
+  return [{ label: '自定义（OpenAI 兼容）', value: CUSTOM_PROVIDER_SENTINEL }, ...systemOptions]
 }
 
 /**

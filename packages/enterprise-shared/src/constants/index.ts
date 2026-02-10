@@ -1,6 +1,9 @@
 // 供应商配置
 export * from './providers'
 
+// 供应商默认端点
+export * from './endpoints'
+
 // API 路径常量
 export const API_VERSION = 'v1'
 export const API_PREFIX = `/api/${API_VERSION}`
@@ -41,7 +44,9 @@ export const API_ROUTES = {
     BY_ID: (id: string) => `/models/${id}`,
     CHAT: (id: string) => `/models/${id}/chat`,
     USAGE: (id: string) => `/models/${id}/usage`,
-    PERMISSIONS: (id: string) => `/models/${id}/permissions`
+    PERMISSIONS: (id: string) => `/models/${id}/permissions`,
+    FETCH_REMOTE: '/models/fetch-remote',
+    BATCH: '/models/batch'
   },
 
   // 知识库
@@ -77,6 +82,17 @@ export const API_ROUTES = {
     BACKUPS: '/admin/backups',
     SETTINGS: '/admin/settings',
     HEALTH: '/admin/health'
+  },
+
+  // 提示词助手预设
+  ASSISTANT_PRESETS: {
+    BASE: '/assistant-presets',
+    BY_ID: (id: string) => `/assistant-presets/${id}`,
+    TAGS: '/assistant-presets/tags',
+    TAG_BY_ID: (id: string) => `/assistant-presets/tags/${id}`,
+    SEED: '/assistant-presets/seed',
+    CLIENT: '/assistant-presets/client',
+    GENERATE_PROMPT: '/assistant-presets/generate-prompt'
   }
 } as const
 
@@ -184,28 +200,32 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     knowledgeBases: ['read', 'write', 'admin'],
     users: ['read', 'write', 'admin'],
     statistics: ['read', 'export'],
-    system: ['backup', 'restore', 'settings']
+    system: ['backup', 'restore', 'settings'],
+    assistantPresets: ['read', 'write', 'admin']
   },
   [SYSTEM_ROLES.ADMIN]: {
     models: ['read', 'use'],
     knowledgeBases: ['read', 'write', 'admin'],
     users: ['read', 'write'],
     statistics: ['read', 'export'],
-    system: ['backup']
+    system: ['backup'],
+    assistantPresets: ['read', 'write', 'admin']
   },
   [SYSTEM_ROLES.MANAGER]: {
     models: ['read', 'use'],
     knowledgeBases: ['read', 'write'],
     users: ['read'],
     statistics: ['read'],
-    system: []
+    system: [],
+    assistantPresets: ['read']
   },
   [SYSTEM_ROLES.USER]: {
     models: ['read', 'use'],
     knowledgeBases: ['read'],
     users: [],
     statistics: [],
-    system: []
+    system: [],
+    assistantPresets: ['read']
   }
 } as const
 

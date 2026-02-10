@@ -260,7 +260,18 @@ export function getAssistantById(id: string) {
 }
 
 export async function createAssistantFromAgent(agent: AssistantPreset) {
-  const assistantId = uuid()
+  const existingAssistants = store.getState().assistants.assistants
+  const isEnterpriseMode = store.getState().enterprise?.isEnterpriseMode ?? false
+
+  // 企业版预设：检查是否已添加（防止 ID 重复）
+  if (isEnterpriseMode && existingAssistants.some((a) => a.id === agent.id)) {
+    window.toast.info(i18n.t('message.assistant.already_added'))
+    const existing = existingAssistants.find((a) => a.id === agent.id)!
+    return existing
+  }
+
+  // 企业版保留服务端 ID，非企业版生成新 ID
+  const assistantId = isEnterpriseMode ? agent.id : uuid()
   const topic = getDefaultTopic(assistantId)
 
   const assistant: Assistant = {

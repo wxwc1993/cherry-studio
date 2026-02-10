@@ -11,12 +11,13 @@
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "..",
     "resolveJsonModule": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../shared/models/**/*"],
   "exclude": ["node_modules", "dist"]
 }

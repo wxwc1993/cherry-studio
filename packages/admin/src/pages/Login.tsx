@@ -15,7 +15,6 @@ export default function Login() {
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
 
-  // 处理飞书 OAuth 回调
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const code = urlParams.get('code')
@@ -23,7 +22,6 @@ export default function Login() {
 
     if (error) {
       message.error('飞书授权失败: ' + (urlParams.get('error_description') || error))
-      // 清除 URL 参数
       window.history.replaceState({}, '', window.location.pathname)
       return
     }
@@ -39,12 +37,10 @@ export default function Login() {
       const response = await authApi.feishuLogin(code)
       const { user, accessToken, refreshToken } = response.data.data
       setAuth(user, accessToken, refreshToken)
-      // 清除 URL 参数
       window.history.replaceState({}, '', window.location.pathname)
       message.success('登录成功')
       navigate('/dashboard')
     } catch (error: any) {
-      // 清除 URL 参数避免重复尝试
       window.history.replaceState({}, '', window.location.pathname)
       message.error(error.response?.data?.error?.message || '登录失败，请重试')
     } finally {
@@ -53,13 +49,11 @@ export default function Login() {
   }
 
   const handleFeishuLogin = () => {
-    // 重定向到飞书授权
     const feishuAppId = import.meta.env.VITE_FEISHU_APP_ID
     const redirectUri = encodeURIComponent(window.location.origin + '/login')
     window.location.href = `https://open.feishu.cn/open-apis/authen/v1/authorize?app_id=${feishuAppId}&redirect_uri=${redirectUri}&response_type=code`
   }
 
-  // 开发环境：真实后端登录
   const handleDevLogin = async () => {
     setDevLoading(true)
     try {
@@ -82,15 +76,64 @@ export default function Login() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        background: 'linear-gradient(135deg, #0a0e1a 0%, #1a1040 50%, #0a0e1a 100%)',
+        backgroundSize: '400% 400%',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-      <Card style={{ width: 400, textAlign: 'center' }}>
+      {/* Ambient glow effects */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: '10%',
+          width: 400,
+          height: 400,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+          pointerEvents: 'none'
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '10%',
+          right: '15%',
+          width: 300,
+          height: 300,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+          pointerEvents: 'none'
+        }}
+      />
+
+      <Card
+        className="glass-card"
+        style={{
+          width: 420,
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 1,
+          padding: '8px 0'
+        }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div>
-            <Title level={2} style={{ marginBottom: 8 }}>
+            <Title
+              level={2}
+              style={{
+                marginBottom: 8,
+                fontFamily: 'var(--cs-font-heading)',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
               Cherry Studio
             </Title>
-            <Text type="secondary">企业管理后台</Text>
+            <Text style={{ color: 'var(--cs-text-2)' }}>企业管理后台</Text>
           </div>
 
           <Button
@@ -99,13 +142,20 @@ export default function Login() {
             block
             loading={loading}
             onClick={handleFeishuLogin}
-            style={{ height: 48 }}>
+            style={{
+              height: 48,
+              background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
+              border: 'none',
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: '0 4px 20px rgba(99,102,241,0.3)'
+            }}>
             飞书登录
           </Button>
 
           {import.meta.env.DEV && (
-            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
-              <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+            <div style={{ borderTop: '1px solid var(--cs-border)', paddingTop: 16 }}>
+              <Text style={{ display: 'block', marginBottom: 12, color: 'var(--cs-text-3)' }}>
                 开发者登录 (仅开发环境)
               </Text>
               <Input
@@ -120,7 +170,17 @@ export default function Login() {
                 onChange={(e) => setDevPassword(e.target.value)}
                 style={{ marginBottom: 12 }}
               />
-              <Button size="large" block loading={devLoading} onClick={handleDevLogin} style={{ height: 48 }}>
+              <Button
+                size="large"
+                block
+                loading={devLoading}
+                onClick={handleDevLogin}
+                style={{
+                  height: 48,
+                  background: 'var(--cs-bg-2)',
+                  borderColor: 'var(--cs-border)',
+                  color: 'var(--cs-text-1)'
+                }}>
                 开发者登录
               </Button>
             </div>

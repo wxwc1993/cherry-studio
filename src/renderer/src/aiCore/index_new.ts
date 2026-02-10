@@ -136,8 +136,11 @@ export default class ModernAiProvider {
     if (SUPPORTED_IMAGE_ENDPOINT_LIST.includes(this.config.options.endpoint)) {
       providerConfig.isImageGenerationEndpoint = true
     }
-    // 准备特殊配置
-    await prepareSpecialProviderConfig(this.actualProvider, this.config)
+    // 准备特殊配置（传递 model 用于企业 Provider 的 URL 重写，传递元数据用于统计）
+    await prepareSpecialProviderConfig(this.actualProvider, this.config, this.model, {
+      topicId: providerConfig.topicId,
+      assistantPresetId: providerConfig.assistant?.id
+    })
 
     // 提前创建本地 provider 实例
     if (!this.localProvider) {

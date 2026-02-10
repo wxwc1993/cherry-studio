@@ -31,6 +31,7 @@ import { uuid } from '@renderer/utils'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useEnterpriseDefaultModels } from './useEnterpriseDefaultModels'
 import { useEnterpriseProviders } from './useEnterpriseProviders'
 import { useEnterpriseRestrictions } from './useEnterpriseRestrictions'
 import { TopicManager } from './useTopic'
@@ -228,6 +229,21 @@ export function useDefaultAssistant() {
 export function useDefaultModel() {
   const { defaultModel, quickModel, translateModel } = useAppSelector((state) => state.llm)
   const dispatch = useAppDispatch()
+  const { isEnterpriseActive } = useEnterpriseRestrictions()
+  const enterpriseDefaults = useEnterpriseDefaultModels()
+
+  const noOp = useCallback(() => {}, [])
+
+  if (isEnterpriseActive) {
+    return {
+      defaultModel: enterpriseDefaults.defaultAssistantModel ?? defaultModel,
+      quickModel: enterpriseDefaults.quickModel ?? quickModel,
+      translateModel: enterpriseDefaults.translateModel ?? translateModel,
+      setDefaultModel: noOp as unknown as (model: Model) => void,
+      setQuickModel: noOp as unknown as (model: Model) => void,
+      setTranslateModel: noOp as unknown as (model: Model) => void
+    }
+  }
 
   return {
     defaultModel,

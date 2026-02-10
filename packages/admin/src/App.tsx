@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import Layout from './components/Layout'
+import AssistantPresets from './pages/AssistantPresets'
 import Backups from './pages/Backups'
 import Dashboard from './pages/Dashboard'
 import Departments from './pages/Departments'
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="models" element={<Models />} />
           <Route path="knowledge-bases" element={<KnowledgeBases />} />
           <Route path="statistics" element={<Statistics />} />
+          <Route path="assistant-presets" element={<AssistantPresets />} />
           <Route path="backups" element={<Backups />} />
           <Route path="settings" element={<Settings />} />
         </Route>

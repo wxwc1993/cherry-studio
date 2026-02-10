@@ -1876,7 +1876,8 @@
     "assistant": {
       "added": {
         "content": "助手添加成功"
-      }
+      },
+      "already_added": "该助手预设已添加"
     },
     "attachments": {
       "pasted_image": "剪切板图片",
@@ -4188,6 +4189,7 @@
           "noServerConfig": "未配置企业服务器地址，请联系管理员",
           "passwordRequired": "请输入密码",
           "serverRequired": "请输入企业服务器地址",
+          "timeout": "登录超时，请重试",
           "usernameRequired": "请输入用户名"
         },
         "feishuLogin": "飞书登录",
@@ -4709,6 +4711,7 @@
       "default_assistant_model": "默认助手模型",
       "default_assistant_model_description": "创建新助手时使用的模型，如果助手未设置模型，则使用此模型",
       "empty": "没有模型",
+      "enterprise_managed": "由企业管理员统一配置",
       "manage": {
         "add_listed": {
           "confirm": "确定要添加所有模型到列表吗？",

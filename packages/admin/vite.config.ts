@@ -6,7 +6,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
+      '@provider-logos': path.resolve(__dirname, '../../src/renderer/src/assets/images/providers'),
+      '@model-logos': path.resolve(__dirname, '../../src/renderer/src/assets/images/models')
     }
   },
   server: {

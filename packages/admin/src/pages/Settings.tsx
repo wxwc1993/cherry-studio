@@ -1,8 +1,17 @@
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons'
-import { Alert, Button, Card, Divider, Form, Input, InputNumber, message, Space, Switch, Tabs } from 'antd'
-import { useEffect, useState } from 'react'
+import type { DefaultModelsConfig } from '@cherry-studio/enterprise-shared'
+import { Alert, Button, Card, Divider, Form, Input, InputNumber, message, Select, Space, Switch, Tabs } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
 
-import { adminApi } from '../services/api'
+import { adminApi, modelsApi } from '../services/api'
+
+interface ModelOption {
+  id: string
+  name: string
+  displayName: string
+  providerId: string
+  enabled: boolean
+}
 
 interface SystemSettings {
   general: {
@@ -49,10 +58,23 @@ export default function Settings() {
   const [feishuForm] = Form.useForm()
   const [storageForm] = Form.useForm()
   const [emailForm] = Form.useForm()
+  const [defaultModelsForm] = Form.useForm()
+  const [modelOptions, setModelOptions] = useState<ModelOption[]>([])
+
+  const loadModelOptions = useCallback(async () => {
+    try {
+      const response = await modelsApi.list({ pageSize: 100 })
+      const items: ModelOption[] = response.data.data?.items ?? response.data.data ?? []
+      setModelOptions(items.filter((m) => m.enabled))
+    } catch {
+      // 静默处理，模型列表加载失败不影响整体设置页
+    }
+  }, [])
 
   useEffect(() => {
     loadSettings()
-  }, [])
+    loadModelOptions()
+  }, [loadModelOptions])
 
   const loadSettings = async () => {
     try {
@@ -65,6 +87,13 @@ export default function Settings() {
       feishuForm.setFieldsValue(settings.feishu)
       storageForm.setFieldsValue(settings.storage)
       emailForm.setFieldsValue(settings.email)
+
+      const defaultModels = (settings as any).defaultModels as DefaultModelsConfig | undefined
+      defaultModelsForm.setFieldsValue({
+        defaultAssistantModel: defaultModels?.defaultAssistantModel?.modelId ?? undefined,
+        quickModel: defaultModels?.quickModel?.modelId ?? undefined,
+        translateModel: defaultModels?.translateModel?.modelId ?? undefined
+      })
     } catch (error: any) {
       message.error(error.response?.data?.error?.message || '加载设置失败')
     } finally {
@@ -72,11 +101,46 @@ export default function Settings() {
     }
   }
 
+  const buildModelRef = useCallback(
+    (modelId: string | undefined) => {
+      if (!modelId) {
+        return undefined
+      }
+      const model = modelOptions.find((m) => m.id === modelId)
+      if (!model) {
+        return undefined
+      }
+      return {
+        modelId: model.id,
+        modelName: model.displayName || model.name,
+        providerId: model.providerId
+      }
+    },
+    [modelOptions]
+  )
+
   const handleSave = async (section: string, form: any) => {
     try {
       const values = await form.validateFields()
       setSaving(true)
-      await adminApi.updateSettings({ [section]: values })
+
+      if (section === 'defaultModels') {
+        // defaultModels 需要先 GET 当前 settings，合并后再 PATCH
+        const currentResponse = await adminApi.getSettings()
+        const currentSettings = currentResponse.data.data?.settings ?? {}
+        const defaultModelsPayload: DefaultModelsConfig = {
+          defaultAssistantModel: buildModelRef(values.defaultAssistantModel),
+          quickModel: buildModelRef(values.quickModel),
+          translateModel: buildModelRef(values.translateModel)
+        }
+        await adminApi.updateSettings({
+          ...currentSettings,
+          defaultModels: defaultModelsPayload
+        })
+      } else {
+        await adminApi.updateSettings({ [section]: values })
+      }
+
       message.success('保存成功')
     } catch (error: any) {
       if (error.response) {
@@ -275,6 +339,72 @@ export default function Settings() {
                 type="primary"
                 icon={<SaveOutlined />}
                 onClick={() => handleSave('email', emailForm)}
+                loading={saving}>
+                保存
+              </Button>
+              <Button icon={<ReloadOutlined />} onClick={loadSettings}>
+                重置
+              </Button>
+            </Space>
+          </Form>
+        </Card>
+      )
+    },
+    {
+      key: 'defaultModels',
+      label: '默认模型',
+      children: (
+        <Card loading={loading}>
+          <Alert
+            message="默认模型配置"
+            description="配置企业用户的默认助手模型、快速模型和翻译模型。设置后，客户端将使用此处配置的模型，用户无法自行修改。"
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+          <Form form={defaultModelsForm} layout="vertical" style={{ maxWidth: 600 }}>
+            <Form.Item name="defaultAssistantModel" label="默认助手模型" extra="用于新建对话时的默认模型">
+              <Select
+                allowClear
+                showSearch
+                placeholder="选择默认助手模型"
+                optionFilterProp="label"
+                options={modelOptions.map((m) => ({
+                  value: m.id,
+                  label: `${m.displayName || m.name} (${m.providerId})`
+                }))}
+              />
+            </Form.Item>
+            <Form.Item name="quickModel" label="快速模型" extra="用于快速操作（如摘要、续写等）的模型">
+              <Select
+                allowClear
+                showSearch
+                placeholder="选择快速模型"
+                optionFilterProp="label"
+                options={modelOptions.map((m) => ({
+                  value: m.id,
+                  label: `${m.displayName || m.name} (${m.providerId})`
+                }))}
+              />
+            </Form.Item>
+            <Form.Item name="translateModel" label="翻译模型" extra="用于翻译功能的默认模型">
+              <Select
+                allowClear
+                showSearch
+                placeholder="选择翻译模型"
+                optionFilterProp="label"
+                options={modelOptions.map((m) => ({
+                  value: m.id,
+                  label: `${m.displayName || m.name} (${m.providerId})`
+                }))}
+              />
+            </Form.Item>
+            <Divider />
+            <Space>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={() => handleSave('defaultModels', defaultModelsForm)}
                 loading={saving}>
                 保存
               </Button>

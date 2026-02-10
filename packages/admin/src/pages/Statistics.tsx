@@ -1,51 +1,37 @@
-import { DownloadOutlined } from '@ant-design/icons'
-import { Button, Card, Col, DatePicker, message, Row, Select, Spin, Statistic, Table } from 'antd'
-import type { ColumnsType } from 'antd/es/table'
+import {
+  ApartmentOutlined,
+  ApiOutlined,
+  DownloadOutlined,
+  LineChartOutlined,
+  RobotOutlined,
+  UserOutlined
+} from '@ant-design/icons'
+import { Button, Card, Col, DatePicker, message, Row, Select, Spin, Tabs } from 'antd'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
-import ReactECharts from 'echarts-for-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { departmentsApi, modelsApi, statisticsApi } from '../services/api'
+import DepartmentTab from './statistics/DepartmentTab'
+import ModelTab from './statistics/ModelTab'
+import OverviewTab from './statistics/OverviewTab'
+import PresetTab from './statistics/PresetTab'
+import type {
+  DepartmentUsage,
+  FilterDepartment,
+  FilterModel,
+  ModelUsage,
+  PresetUsage,
+  UsageData,
+  UserUsage
+} from './statistics/types'
+import UserTab from './statistics/UserTab'
 
 const { RangePicker } = DatePicker
 
-interface UsageData {
-  date: string
-  requests: number
-  tokens: number
-  cost: number
-}
-
-interface ModelUsage {
-  modelId: string
-  modelName: string
-  requests: number
-  tokens: number
-  cost: number
-}
-
-interface UserUsage {
-  userId: string
-  userName: string
-  department: string
-  requests: number
-  tokens: number
-  cost: number
-}
-
-interface Model {
-  id: string
-  displayName: string
-}
-
-interface Department {
-  id: string
-  name: string
-}
-
 export default function Statistics() {
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('overview')
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(30, 'day'), dayjs()])
   const [modelId, setModelId] = useState<string | null>(null)
   const [departmentId, setDepartmentId] = useState<string | null>(null)
@@ -54,20 +40,13 @@ export default function Statistics() {
   const [usageData, setUsageData] = useState<UsageData[]>([])
   const [modelUsage, setModelUsage] = useState<ModelUsage[]>([])
   const [userUsage, setUserUsage] = useState<UserUsage[]>([])
-  const [summary, setSummary] = useState({ requests: 0, tokens: 0, cost: 0 })
+  const [departmentUsage, setDepartmentUsage] = useState<DepartmentUsage[]>([])
+  const [presetUsage, setPresetUsage] = useState<PresetUsage[]>([])
 
-  const [models, setModels] = useState<Model[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
+  const [models, setModels] = useState<FilterModel[]>([])
+  const [departments, setDepartments] = useState<FilterDepartment[]>([])
 
-  useEffect(() => {
-    loadFilters()
-  }, [])
-
-  useEffect(() => {
-    loadData()
-  }, [dateRange, modelId, departmentId, groupBy])
-
-  const loadFilters = async () => {
+  const loadFilters = useCallback(async () => {
     try {
       const [modelsRes, deptsRes] = await Promise.all([modelsApi.list(), departmentsApi.list()])
       setModels(modelsRes.data.data)
@@ -75,9 +54,9 @@ export default function Statistics() {
     } catch (error: any) {
       message.error(error.response?.data?.error?.message || '加载筛选条件失败')
     }
-  }
+  }, [])
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       const params = {
@@ -88,29 +67,43 @@ export default function Statistics() {
         groupBy
       }
 
-      const [usageRes, modelRes, userRes] = await Promise.all([
+      const [usageRes, modelRes, userRes, deptRes, presetRes] = await Promise.all([
         statisticsApi.usage(params),
         statisticsApi.byModel(params),
-        statisticsApi.byUser(params)
+        statisticsApi.byUser(params),
+        statisticsApi.byDepartment(params),
+        statisticsApi.byAssistantPreset(params)
       ])
+
+      // [DEBUG] 调试仪表盘图表无数据问题，调试完成后移除
+      console.warn('[DEBUG] Statistics params:', params)
+      console.warn('[DEBUG] usage:', usageRes.data.data?.length, usageRes.data.data?.slice(0, 2))
+      console.warn('[DEBUG] models:', modelRes.data.data?.length, modelRes.data.data?.slice(0, 2))
+      console.warn('[DEBUG] users:', userRes.data.data?.length, userRes.data.data?.slice(0, 2))
+      console.warn('[DEBUG] departments:', deptRes.data.data?.length, deptRes.data.data?.slice(0, 2))
+      console.warn('[DEBUG] presets:', presetRes.data.data?.length, presetRes.data.data?.slice(0, 2))
 
       setUsageData(usageRes.data.data)
       setModelUsage(modelRes.data.data)
       setUserUsage(userRes.data.data)
-
-      // Calculate summary
-      const totalRequests = usageRes.data.data.reduce((sum: number, d: UsageData) => sum + d.requests, 0)
-      const totalTokens = usageRes.data.data.reduce((sum: number, d: UsageData) => sum + d.tokens, 0)
-      const totalCost = usageRes.data.data.reduce((sum: number, d: UsageData) => sum + d.cost, 0)
-      setSummary({ requests: totalRequests, tokens: totalTokens, cost: totalCost })
+      setDepartmentUsage(deptRes.data.data)
+      setPresetUsage(presetRes.data.data)
     } catch (error: any) {
       message.error(error.response?.data?.error?.message || '加载数据失败')
     } finally {
       setLoading(false)
     }
-  }
+  }, [dateRange, modelId, departmentId, groupBy])
 
-  const handleExport = async () => {
+  useEffect(() => {
+    loadFilters()
+  }, [loadFilters])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  const handleExport = useCallback(async () => {
     try {
       const params = {
         startDate: dateRange[0].format('YYYY-MM-DD'),
@@ -130,88 +123,58 @@ export default function Statistics() {
     } catch (error: any) {
       message.error(error.response?.data?.error?.message || '导出失败')
     }
-  }
+  }, [dateRange, modelId, departmentId])
 
-  const usageChartOption = {
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['请求数', 'Token 数', '费用']
-    },
-    xAxis: {
-      type: 'category',
-      data: usageData.map((d) => d.date)
-    },
-    yAxis: [
-      { type: 'value', name: '请求数 / Token' },
-      { type: 'value', name: '费用 ($)' }
-    ],
-    series: [
-      {
-        name: '请求数',
-        type: 'bar',
-        data: usageData.map((d) => d.requests)
-      },
-      {
-        name: 'Token 数',
-        type: 'line',
-        data: usageData.map((d) => d.tokens)
-      },
-      {
-        name: '费用',
-        type: 'line',
-        yAxisIndex: 1,
-        data: usageData.map((d) => d.cost)
-      }
-    ]
-  }
-
-  const modelPieOption = {
-    tooltip: {
-      trigger: 'item',
-      formatter: '{b}: {c} ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left'
-    },
-    series: [
-      {
-        type: 'pie',
-        radius: ['40%', '70%'],
-        data: modelUsage.map((m) => ({
-          name: m.modelName,
-          value: m.requests
-        }))
-      }
-    ]
-  }
-
-  const modelColumns: ColumnsType<ModelUsage> = [
-    { title: '模型', dataIndex: 'modelName', key: 'modelName' },
-    { title: '请求数', dataIndex: 'requests', key: 'requests', sorter: (a, b) => a.requests - b.requests },
-    { title: 'Token 数', dataIndex: 'tokens', key: 'tokens', sorter: (a, b) => a.tokens - b.tokens },
+  const tabItems = [
     {
-      title: '费用',
-      dataIndex: 'cost',
-      key: 'cost',
-      sorter: (a, b) => a.cost - b.cost,
-      render: (cost) => `$${cost.toFixed(2)}`
-    }
-  ]
-
-  const userColumns: ColumnsType<UserUsage> = [
-    { title: '用户', dataIndex: 'userName', key: 'userName' },
-    { title: '部门', dataIndex: 'department', key: 'department' },
-    { title: '请求数', dataIndex: 'requests', key: 'requests', sorter: (a, b) => a.requests - b.requests },
-    { title: 'Token 数', dataIndex: 'tokens', key: 'tokens', sorter: (a, b) => a.tokens - b.tokens },
+      key: 'overview',
+      label: (
+        <span>
+          <LineChartOutlined />
+          概览
+        </span>
+      ),
+      children: <OverviewTab loading={loading} usageData={usageData} />
+    },
     {
-      title: '费用',
-      dataIndex: 'cost',
-      key: 'cost',
-      sorter: (a, b) => a.cost - b.cost,
-      render: (cost) => `$${cost.toFixed(2)}`
+      key: 'departments',
+      label: (
+        <span>
+          <ApartmentOutlined />
+          部门统计
+        </span>
+      ),
+      children: <DepartmentTab loading={loading} departmentData={departmentUsage} />
+    },
+    {
+      key: 'models',
+      label: (
+        <span>
+          <ApiOutlined />
+          模型统计
+        </span>
+      ),
+      children: <ModelTab loading={loading} modelData={modelUsage} />
+    },
+    {
+      key: 'users',
+      label: (
+        <span>
+          <UserOutlined />
+          用户统计
+        </span>
+      ),
+      children: <UserTab loading={loading} userData={userUsage} />
+    },
+    {
+      key: 'presets',
+      label: (
+        <span>
+          <RobotOutlined />
+          助手预设统计
+        </span>
+      ),
+      children: <PresetTab loading={loading} presetData={presetUsage} />
     }
   ]
 
@@ -222,9 +185,6 @@ export default function Statistics() {
       </div>
     )
   }
-
-  // 空数据状态处理
-  const _hasData = usageData.length > 0 || modelUsage.length > 0 || userUsage.length > 0
 
   return (
     <div>
@@ -273,55 +233,7 @@ export default function Statistics() {
         </Row>
       </Card>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={8}>
-          <Card>
-            <Statistic title="总请求数" value={summary.requests} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card>
-            <Statistic title="总 Token 数" value={summary.tokens} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card>
-            <Statistic title="总费用" value={summary.cost} precision={2} prefix="$" />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={16}>
-          <Card title="使用趋势" loading={loading}>
-            <ReactECharts option={usageChartOption} style={{ height: 350 }} />
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card title="模型分布" loading={loading}>
-            <ReactECharts option={modelPieOption} style={{ height: 350 }} />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        <Col xs={24} lg={12}>
-          <Card title="模型使用统计" loading={loading}>
-            <Table rowKey="modelId" columns={modelColumns} dataSource={modelUsage} pagination={false} size="small" />
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card title="用户使用统计" loading={loading}>
-            <Table
-              rowKey="userId"
-              columns={userColumns}
-              dataSource={userUsage}
-              pagination={{ pageSize: 10 }}
-              size="small"
-            />
-          </Card>
-        </Col>
-      </Row>
+      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
     </div>
   )
 }

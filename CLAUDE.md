@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 核心原则
 
-- **问答全程使用中文进行
+- **问答全程使用中文进行**
 - **禁止 `console.log`**：所有日志必须通过 `loggerService` 输出并附带上下文（见日志章节）。
 - **先提议再执行**：修改代码前先说明方案，等待用户确认后再动手。
 - **完成前必须检查**：任务完成前必须依次执行 `pnpm lint`、`pnpm test`、`pnpm format` 并全部通过。
@@ -73,28 +73,29 @@ pnpm agents:studio          # 打开 Drizzle Studio
 
 ### 主进程服务（`src/main/services/`）
 
-40+ 个服务，关键服务包括：MCPService（MCP 服务器生命周期管理，支持 stdio/SSE/HTTP 传输和 OAuth 认证）、KnowledgeService（基于 LibSqlDb 的 RAG 向量检索）、WindowService、FileStorage、BackupService、UpdateService、TranslateService、LlmService、AssistantService、SettingsService。
+47 个服务，关键服务包括：MCPService（MCP 服务器生命周期管理，支持 stdio/SSE/HTTP 传输和 OAuth 认证）、KnowledgeService（基于 LibSqlDb 的 RAG 向量检索）、WindowService、FileStorage、BackupService、UpdateService、TranslateService、LlmService、AssistantService、SettingsService。
 
 ### AI Core — 双层架构
 
 **新架构**（`packages/aiCore/`，发布为 `@cherrystudio/ai-core`）：
-基于 Vercel AI SDK（`@ai-sdk/*`），采用 Models → Runtime → Plugins → Middleware → Providers 分层设计。19+ Provider 通过注册表管理。详见 `packages/aiCore/AI_SDK_ARCHITECTURE.md`。
+基于 Vercel AI SDK（`@ai-sdk/*`），采用 Models → Runtime → Plugins → Middleware → Providers 分层设计。12 个基础 Provider（openai、anthropic、google、xai、azure、deepseek、openrouter、cherryin 等），通过注册表管理，支持动态扩展。详见 `packages/aiCore/AI_SDK_ARCHITECTURE.md`。
 
 **旧架构**（`src/renderer/src/aiCore/`，迁移中）：
-- `clients/` — SDK 适配层（OpenAI、Gemini、Anthropic 等）
 - `middleware/` — 功能中间件（AiSdkMiddlewareBuilder、anthropicCache、toolChoice、noThink、qwenThinking 等 8 个）
-- `legacy/` — 按 Provider 实现的旧版代码（逐步迁移至 packages/aiCore）
+- `legacy/clients/` — SDK 适配层（OpenAI、Gemini、Anthropic、AWS 等按 Provider 组织）
+- `legacy/middleware/` — 旧版中间件（逐步迁移至 packages/aiCore）
+- `plugins/`、`prepareParams/`、`tools/`、`trace/`、`types/` — 其他辅助模块
 - 设计文档：`src/renderer/src/aiCore/AI_CORE_DESIGN.md`
 
 ### 状态管理
 
-Redux Toolkit 位于 `src/renderer/src/store/`，包含 26 个 slice。通过 `redux-persist` 持久化到 localStorage。
+Redux Toolkit 位于 `src/renderer/src/store/`，包含 27 个 slice。通过 `redux-persist` 持久化到 localStorage。
 
 **非持久化 slice**（blacklist）：`runtime`、`messages`、`messageBlocks`、`tabs`、`toolPermissions`。
 
 **跨窗口同步 slice**（StoreSyncService）：`assistants`、`settings`、`llm`、`selectionStore`、`note`。
 
-持久化版本号：当前 v194，迁移逻辑在 store 配置中。
+持久化版本号：当前 v195，迁移逻辑在 store 配置中。
 
 ### 存储层
 
@@ -119,8 +120,8 @@ Redux Toolkit 位于 `src/renderer/src/store/`，包含 26 个 slice。通过 `r
 | `ai-sdk-provider` | `@cherrystudio/ai-sdk-provider` | 自定义 AI SDK Provider（已发布 npm 包） |
 | `extension-table-plus` | `@cherrystudio/extension-table-plus` | 表格渲染扩展（已发布 npm 包） |
 | `enterprise-shared` | `@cherry-studio/enterprise-shared` | 企业版功能类型（已发布 npm 包） |
-| `server` | `@cherry-studio/server` | 后端服务包 |
-| `admin` | `@cherry-studio/admin` | 管理面板包 |
+| `server` | `@cherry-studio/server` | 企业版后端（Express 5 + PostgreSQL + pgvector），详见 `packages/server/CLAUDE.md` |
+| `admin` | `@cherry-studio/admin` | 企业版管理面板（React 18 + Ant Design Pro + ECharts），详见 `packages/admin/CLAUDE.md` |
 | `shared` | `@shared/*`（路径别名） | IpcChannel 枚举、常量、Provider 配置、类型（非 npm 包） |
 | `mcp-trace` | `@mcp-trace/*`（路径别名） | MCP 的 OpenTelemetry 链路追踪（非 npm 包） |
 
@@ -179,7 +180,7 @@ Tailwind CSS 4 + Ant Design 5。使用 `cn()` 工具函数（clsx + tailwind-mer
 - **Biome** → 格式化（120 字符行宽、2 空格缩进、单引号、无尾逗号、按需分号、`bracketSameLine: true`）+ Tailwind 类名排序
 - **TypeScript** → 通过 `tsgo` 严格类型检查（同时检查 `tsconfig.node.json` 和 `tsconfig.web.json`）
 
-## CI 流水线（`.github/workflows/pr-ci.yml`）
+## CI 流水线（`.github/workflows/ci.yml`）
 
 PR 触发（目标分支 `main`、`develop`、`v2`），依次检查：lint → format → typecheck → i18n:check → i18n:hardcoded:strict → test。
 

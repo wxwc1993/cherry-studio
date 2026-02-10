@@ -156,7 +156,7 @@ export default function Backups() {
             <Tag color={colors[status]}>{labels[status]}</Tag>
             {status === 'running' && <Progress type="circle" percent={50} size={20} />}
             {status === 'failed' && record.error && (
-              <span style={{ color: '#ff4d4f', fontSize: 12 }}>{record.error}</span>
+              <span style={{ color: 'var(--cs-error)', fontSize: 12 }}>{record.error}</span>
             )}
           </Space>
         )

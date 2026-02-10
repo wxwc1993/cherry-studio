@@ -7,13 +7,14 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  RobotOutlined,
   SafetyCertificateOutlined,
   SettingOutlined,
   TeamOutlined,
   UserOutlined
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
-import { Avatar, Button, Dropdown, Layout as AntLayout, Menu, theme } from 'antd'
+import { Avatar, Button, Dropdown, Layout as AntLayout, Menu } from 'antd'
 import { useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 
@@ -26,9 +27,7 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout, hasPermission } = useAuthStore()
-  const { token } = theme.useToken()
 
-  // 基于权限过滤菜单项
   const menuItems: MenuProps['items'] = useMemo(() => {
     const items: MenuProps['items'] = [
       {
@@ -38,7 +37,6 @@ export default function Layout() {
       }
     ]
 
-    // 组织管理菜单 - 需要 users read 权限
     if (hasPermission('users', 'read')) {
       const orgChildren = []
       orgChildren.push({ key: '/users', icon: <UserOutlined />, label: '用户管理' })
@@ -54,7 +52,6 @@ export default function Layout() {
       })
     }
 
-    // 模型管理 - 需要 models read 权限
     if (hasPermission('models', 'read')) {
       items.push({
         key: '/models',
@@ -63,7 +60,6 @@ export default function Layout() {
       })
     }
 
-    // 知识库管理 - 需要 knowledgeBases read 权限
     if (hasPermission('knowledgeBases', 'read')) {
       items.push({
         key: '/knowledge-bases',
@@ -72,7 +68,14 @@ export default function Layout() {
       })
     }
 
-    // 数据统计 - 需要 statistics read 权限
+    if (hasPermission('assistantPresets', 'read')) {
+      items.push({
+        key: '/assistant-presets',
+        icon: <RobotOutlined />,
+        label: '提示词助手'
+      })
+    }
+
     if (hasPermission('statistics', 'read')) {
       items.push({
         key: '/statistics',
@@ -81,7 +84,6 @@ export default function Layout() {
       })
     }
 
-    // 备份管理 - 需要 system backup 权限
     if (hasPermission('system', 'backup')) {
       items.push({
         key: '/backups',
@@ -90,7 +92,6 @@ export default function Layout() {
       })
     }
 
-    // 系统设置 - 需要 system settings 权限
     if (hasPermission('system', 'settings')) {
       items.push({
         key: '/settings',
@@ -132,9 +133,10 @@ export default function Layout() {
         trigger={null}
         collapsible
         collapsed={collapsed}
-        theme="light"
+        theme="dark"
         style={{
-          borderRight: `1px solid ${token.colorBorderSecondary}`
+          background: 'var(--cs-bg-1)',
+          borderRight: '1px solid var(--cs-border)'
         }}>
         <div
           style={{
@@ -142,45 +144,60 @@ export default function Layout() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`
+            borderBottom: '1px solid transparent',
+            borderImage: 'linear-gradient(90deg, transparent, var(--cs-primary), transparent) 1',
+            position: 'relative'
           }}>
           <span
+            className="gradient-text"
             style={{
               fontSize: collapsed ? 16 : 18,
-              fontWeight: 600,
-              color: token.colorPrimary
+              fontWeight: 700,
+              fontFamily: 'var(--cs-font-heading)',
+              letterSpacing: '-0.02em'
             }}>
             {collapsed ? 'CS' : 'Cherry Studio'}
           </span>
         </div>
         <Menu
+          theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
           defaultOpenKeys={['organization']}
           items={menuItems}
           onClick={handleMenuClick}
-          style={{ borderRight: 0 }}
+          style={{ borderRight: 0, background: 'transparent' }}
         />
       </Sider>
       <AntLayout>
         <Header
           style={{
             padding: '0 24px',
-            background: token.colorBgContainer,
+            background: 'rgba(17,24,39,0.85)',
+            backdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`
+            borderBottom: '1px solid transparent',
+            borderImage: 'linear-gradient(90deg, transparent, var(--cs-border), transparent) 1'
           }}>
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
+            style={{ color: 'var(--cs-text-2)' }}
           />
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar src={user?.avatar} icon={<UserOutlined />} />
-              <span>{user?.name}</span>
+              <Avatar
+                src={user?.avatar}
+                icon={<UserOutlined />}
+                style={{
+                  boxShadow: '0 0 0 2px rgba(99,102,241,0.3)',
+                  border: '2px solid var(--cs-bg-2)'
+                }}
+              />
+              <span style={{ color: 'var(--cs-text-1)' }}>{user?.name}</span>
             </div>
           </Dropdown>
         </Header>
@@ -188,11 +205,13 @@ export default function Layout() {
           style={{
             margin: 24,
             padding: 24,
-            background: token.colorBgContainer,
-            borderRadius: token.borderRadiusLG,
-            minHeight: 280
+            background: 'transparent',
+            minHeight: 280,
+            backgroundImage: 'radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.06) 0%, transparent 50%)'
           }}>
-          <Outlet />
+          <div className="fade-in">
+            <Outlet />
+          </div>
         </Content>
       </AntLayout>
     </AntLayout>

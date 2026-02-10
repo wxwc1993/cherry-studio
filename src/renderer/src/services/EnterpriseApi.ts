@@ -1,7 +1,9 @@
+import { loggerService } from '@logger'
 import store from '@renderer/store'
 import { clearAuth, updateTokens } from '@renderer/store/enterprise'
 
 const API_PREFIX = '/api/v1'
+const logger = loggerService.withContext('EnterpriseApi')
 
 interface ApiResponse<T> {
   success: boolean
@@ -154,6 +156,16 @@ class EnterpriseApiService {
     }>('POST', '/auth/feishu/login', { code })
   }
 
+  async feishuPoll(sessionId: string) {
+    return this.request<{
+      status: 'pending' | 'success' | 'error'
+      user?: unknown
+      accessToken?: string
+      refreshToken?: string
+      error?: string
+    }>('GET', `/auth/feishu/poll?session_id=${encodeURIComponent(sessionId)}`)
+  }
+
   async devLogin(username: string, password: string) {
     return this.request<{
       user: unknown
@@ -177,6 +189,7 @@ class EnterpriseApiService {
 
   async chat(modelId: string, messages: unknown[], options?: Record<string, unknown>) {
     return this.request<unknown>('POST', `/models/${modelId}/chat`, {
+      modelId,
       messages,
       stream: false,
       ...options
@@ -189,32 +202,137 @@ class EnterpriseApiService {
     options?: Record<string, unknown>,
     onChunk?: (chunk: string) => void
   ): Promise<void> {
-    const response = await fetch(`${this.getBaseUrl()}${API_PREFIX}/models/${modelId}/chat`, {
+    const startTime = Date.now()
+    const endpoint = `/models/${modelId}/chat`
+    const response = await fetch(`${this.getBaseUrl()}${API_PREFIX}${endpoint}`, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
+        modelId,
         messages,
         stream: true,
         ...options
       })
     })
 
+    if (response.status === 401) {
+      const refreshed = await this.refreshTokens()
+      if (!refreshed) {
+        store.dispatch(clearAuth())
+        this.logRequest('POST', endpoint, false, 401, Date.now() - startTime, 'Authentication expired')
+        throw new Error('Authentication expired')
+      }
+      this.logRequest('POST', endpoint, false, 401, Date.now() - startTime, 'Token refreshed, please retry')
+      throw new Error('Token refreshed, please retry')
+    }
+
     if (!response.ok) {
-      throw new Error('Chat request failed')
+      const errorText = await response.text().catch(() => 'Unknown error')
+      this.logRequest('POST', endpoint, false, response.status, Date.now() - startTime, errorText)
+      throw new Error(`Enterprise chat request failed: ${response.status} ${errorText}`)
     }
 
     const reader = response.body?.getReader()
-    if (!reader) throw new Error('No response body')
+    if (!reader) {
+      this.logRequest('POST', endpoint, false, response.status, Date.now() - startTime, 'No response body')
+      throw new Error('No response body')
+    }
 
     const decoder = new TextDecoder()
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-      const chunk = decoder.decode(value)
-      if (onChunk) {
-        onChunk(chunk)
+        const chunk = decoder.decode(value)
+        if (onChunk) {
+          onChunk(chunk)
+        }
+      }
+      this.logRequest('POST', endpoint, true, response.status, Date.now() - startTime)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      this.logRequest('POST', endpoint, false, response.status, Date.now() - startTime, errorMessage)
+      throw error
+    }
+  }
+
+  /**
+   * 流式对话（带 SSE 解析），将原始 SSE 流解析为文本内容回调
+   * 服务端使用 OpenAI 兼容 SSE 格式：data: {"choices":[{"delta":{"content":"..."}}]}
+   */
+  async chatStreamParsed(
+    modelId: string,
+    messages: unknown[],
+    options?: Record<string, unknown>,
+    callbacks?: {
+      onTextContent?: (text: string) => void
+      onThinkingContent?: (text: string) => void
+      onUsage?: (usage: { promptTokens: number; completionTokens: number; totalTokens: number }) => void
+    }
+  ): Promise<void> {
+    let sseBuffer = ''
+
+    await this.chatStream(modelId, messages, options, (rawChunk: string) => {
+      sseBuffer += rawChunk
+      const lines = sseBuffer.split('\n')
+      // 保留最后一个可能不完整的行
+      sseBuffer = lines.pop() || ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data: ')) {
+          continue
+        }
+
+        const dataStr = trimmed.slice(6)
+        if (dataStr === '[DONE]') {
+          continue
+        }
+
+        try {
+          const data = JSON.parse(dataStr)
+          const delta = data.choices?.[0]?.delta
+
+          if (delta?.content) {
+            callbacks?.onTextContent?.(delta.content)
+          }
+
+          // 部分模型支持 reasoning_content 字段
+          if (delta?.reasoning_content) {
+            callbacks?.onThinkingContent?.(delta.reasoning_content)
+          }
+
+          if (data.usage) {
+            callbacks?.onUsage?.({
+              promptTokens: data.usage.prompt_tokens || 0,
+              completionTokens: data.usage.completion_tokens || 0,
+              totalTokens: data.usage.total_tokens || 0
+            })
+          }
+        } catch {
+          logger.debug('Failed to parse SSE chunk', { dataStr })
+        }
+      }
+    })
+
+    // 处理缓冲区中可能残留的最后一行
+    if (sseBuffer.trim()) {
+      const trimmed = sseBuffer.trim()
+      if (trimmed.startsWith('data: ') && trimmed.slice(6) !== '[DONE]') {
+        try {
+          const data = JSON.parse(trimmed.slice(6))
+          const delta = data.choices?.[0]?.delta
+          if (delta?.content) {
+            callbacks?.onTextContent?.(delta.content)
+          }
+          if (delta?.reasoning_content) {
+            callbacks?.onThinkingContent?.(delta.reasoning_content)
+          }
+        } catch {
+          logger.debug('Failed to parse final SSE buffer', { sseBuffer })
+        }
       }
     }
   }
@@ -251,6 +369,75 @@ class EnterpriseApiService {
   // 用量统计
   async getUsageStats() {
     return this.request<unknown>('GET', '/statistics/overview')
+  }
+
+  // 客户端设置
+  async getClientSettings() {
+    return this.request<{
+      defaultModels: {
+        defaultAssistantModel: {
+          id: string
+          name: string
+          provider: string
+          providerId: string
+          displayName: string
+          description?: string
+          capabilities: string[]
+          enabled: boolean
+        } | null
+        quickModel: {
+          id: string
+          name: string
+          provider: string
+          providerId: string
+          displayName: string
+          description?: string
+          capabilities: string[]
+          enabled: boolean
+        } | null
+        translateModel: {
+          id: string
+          name: string
+          provider: string
+          providerId: string
+          displayName: string
+          description?: string
+          capabilities: string[]
+          enabled: boolean
+        } | null
+      }
+    }>('GET', '/settings/client')
+  }
+
+  // 提示词助手预设
+  async getAssistantPresets(locale?: string) {
+    const params = locale ? `?locale=${locale}` : ''
+    return this.request<{
+      tags: Array<{
+        id: string
+        name: string
+        locale: string
+        order: number
+      }>
+      presets: Array<{
+        id: string
+        name: string
+        emoji?: string
+        description?: string
+        prompt: string
+        locale: string
+        isEnabled: boolean
+        order: number
+        usageCount: number
+        hotScore: number
+        tags?: Array<{
+          id: string
+          name: string
+          locale: string
+          order: number
+        }>
+      }>
+    }>('GET', `/assistant-presets/client${params}`)
   }
 }
 

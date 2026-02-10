@@ -17,6 +17,25 @@ export interface Company extends BaseEntity {
   settings: CompanySettings
 }
 
+export interface FeishuAutoRegisterSettings {
+  enabled: boolean
+  defaultDepartmentId: string
+  defaultRoleId: string
+  defaultStatus: 'active' | 'inactive'
+}
+
+export interface DefaultModelRef {
+  modelId: string // models 表 UUID
+  modelName: string // 显示名称（冗余存储，便于展示）
+  providerId: string // provider ID
+}
+
+export interface DefaultModelsConfig {
+  defaultAssistantModel?: DefaultModelRef
+  quickModel?: DefaultModelRef
+  translateModel?: DefaultModelRef
+}
+
 export interface CompanySettings {
   maxUsers: number
   maxStorage: number // bytes
@@ -27,6 +46,8 @@ export interface CompanySettings {
     primaryColor?: string
     name?: string
   }
+  feishuAutoRegister?: FeishuAutoRegisterSettings
+  defaultModels?: DefaultModelsConfig
 }
 
 // ============ 用户与组织 ============
@@ -44,6 +65,8 @@ export interface User extends BaseEntity {
   departmentId: string
   roleId: string
   feishuUserId?: string
+  feishuOpenId?: string
+  mobile?: string
   email: string
   name: string
   avatar?: string
@@ -67,6 +90,7 @@ export interface RolePermissions {
   users: UserPermission[]
   statistics: StatisticsPermission[]
   system: SystemPermission[]
+  assistantPresets: AssistantPresetPermission[]
 }
 
 export type ModelPermission = 'read' | 'use'
@@ -74,6 +98,7 @@ export type KnowledgeBasePermission = 'read' | 'write' | 'admin'
 export type UserPermission = 'read' | 'write' | 'admin'
 export type StatisticsPermission = 'read' | 'export'
 export type SystemPermission = 'backup' | 'restore' | 'settings'
+export type AssistantPresetPermission = 'read' | 'write' | 'admin'
 
 // ============ 模型管理 ============
 
@@ -216,6 +241,7 @@ export interface UsageLog extends BaseEntity {
   userId: string
   modelId: string
   conversationId?: string
+  assistantPresetId?: string
   inputTokens: number
   outputTokens: number
   totalTokens: number
@@ -325,4 +351,30 @@ export interface SearchRequest {
   knowledgeBaseIds?: string[]
   topK?: number
   scoreThreshold?: number
+}
+
+// ============ 提示词助手预设 ============
+
+export interface AssistantPresetTag extends BaseEntity {
+  companyId: string
+  name: string
+  locale: string
+  order: number
+}
+
+export interface AssistantPresetItem extends BaseEntity {
+  companyId: string
+  name: string
+  emoji?: string
+  description?: string
+  prompt: string
+  locale: string
+  isEnabled: boolean
+  order: number
+  tags?: AssistantPresetTag[]
+}
+
+export interface AssistantPresetClientData {
+  tags: AssistantPresetTag[]
+  presets: AssistantPresetItem[]
 }

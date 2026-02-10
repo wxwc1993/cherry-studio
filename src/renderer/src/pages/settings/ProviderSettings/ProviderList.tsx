@@ -61,7 +61,7 @@ const ProviderList: FC = () => {
     return isEnterpriseActive ? enterpriseProviders : localProviders
   }, [isEnterpriseActive, enterpriseProviders, localProviders])
 
-  const [selectedProvider, _setSelectedProvider] = useState<Provider>(providers[0])
+  const [selectedProvider, _setSelectedProvider] = useState<Provider | undefined>(providers[0])
   const { t } = useTranslation()
   const [searchText, setSearchText] = useState<string>('')
   const [dragging, setDragging] = useState(false)
@@ -369,6 +369,11 @@ const ProviderList: FC = () => {
     )
   }
 
+  // selectedProvider 尚未就绪（providers 为空时的瞬态，useEffect 会在下一个 tick 修正）
+  if (!selectedProvider) {
+    return null
+  }
+
   return (
     <Container className="selectable">
       <ProviderListContainer>
@@ -445,7 +450,7 @@ const ProviderList: FC = () => {
           </AddButtonWrapper>
         )}
       </ProviderListContainer>
-      <ProviderSetting providerId={selectedProvider.id} key={selectedProvider.id} />
+      {selectedProvider && <ProviderSetting providerId={selectedProvider.id} key={selectedProvider.id} />}
     </Container>
   )
 }

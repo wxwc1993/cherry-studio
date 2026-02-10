@@ -103,6 +103,8 @@ export const users = pgTable(
       .notNull()
       .references(() => roles.id),
     feishuUserId: varchar('feishu_user_id', { length: 100 }),
+    feishuOpenId: varchar('feishu_open_id', { length: 100 }),
+    mobile: varchar('mobile', { length: 30 }),
     email: varchar('email', { length: 255 }).notNull(),
     name: varchar('name', { length: 100 }).notNull(),
     avatar: text('avatar'),
@@ -273,7 +275,7 @@ export const conversations = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    modelId: uuid('model_id').references(() => models.id),
+    modelId: uuid('model_id').references(() => models.id, { onDelete: 'set null' }),
     title: varchar('title', { length: 255 }),
     messageCount: integer('message_count').notNull().default(0),
     tokenCount: integer('token_count').notNull().default(0),
@@ -301,6 +303,32 @@ export const messages = pgTable(
   (table) => [index('messages_conversation_id_idx').on(table.conversationId)]
 )
 
+// ============ 模型定价表 ============
+
+export const modelPricing = pgTable(
+  'model_pricing',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    modelId: uuid('model_id')
+      .notNull()
+      .references(() => models.id, { onDelete: 'cascade' }),
+    inputPerMillionTokens: real('input_per_million_tokens').notNull(),
+    outputPerMillionTokens: real('output_per_million_tokens').notNull(),
+    currency: varchar('currency', { length: 10 }).notNull().default('CNY'),
+    effectiveFrom: timestamp('effective_from').notNull().defaultNow(),
+    effectiveTo: timestamp('effective_to'),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    note: text('note')
+  },
+  (table) => [
+    index('model_pricing_company_model_effective_idx').on(table.companyId, table.modelId, table.effectiveFrom)
+  ]
+)
+
 // ============ 用量日志表 ============
 
 export const usageLogs = pgTable(
@@ -310,17 +338,15 @@ export const usageLogs = pgTable(
     companyId: uuid('company_id')
       .notNull()
       .references(() => companies.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id),
-    modelId: uuid('model_id')
-      .notNull()
-      .references(() => models.id),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    modelId: uuid('model_id').references(() => models.id, { onDelete: 'set null' }),
     conversationId: uuid('conversation_id'),
+    assistantPresetId: uuid('assistant_preset_id').references(() => assistantPresets.id, { onDelete: 'set null' }),
     inputTokens: integer('input_tokens').notNull().default(0),
     outputTokens: integer('output_tokens').notNull().default(0),
     totalTokens: integer('total_tokens').notNull().default(0),
     cost: real('cost').notNull().default(0),
+    currency: varchar('currency', { length: 10 }).notNull().default('CNY'),
     duration: integer('duration').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow()
   },
@@ -328,7 +354,8 @@ export const usageLogs = pgTable(
     index('usage_logs_company_id_idx').on(table.companyId),
     index('usage_logs_user_id_idx').on(table.userId),
     index('usage_logs_model_id_idx').on(table.modelId),
-    index('usage_logs_created_at_idx').on(table.createdAt)
+    index('usage_logs_created_at_idx').on(table.createdAt),
+    index('usage_logs_assistant_preset_id_idx').on(table.assistantPresetId)
   ]
 )
 
@@ -421,7 +448,23 @@ export const modelsRelations = relations(models, ({ one, many }) => ({
     fields: [models.companyId],
     references: [companies.id]
   }),
-  permissions: many(modelPermissions)
+  permissions: many(modelPermissions),
+  pricing: many(modelPricing)
+}))
+
+export const modelPricingRelations = relations(modelPricing, ({ one }) => ({
+  company: one(companies, {
+    fields: [modelPricing.companyId],
+    references: [companies.id]
+  }),
+  model: one(models, {
+    fields: [modelPricing.modelId],
+    references: [models.id]
+  }),
+  creator: one(users, {
+    fields: [modelPricing.createdBy],
+    references: [users.id]
+  })
 }))
 
 export const knowledgeBasesRelations = relations(knowledgeBases, ({ one, many }) => ({
@@ -480,6 +523,25 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   })
 }))
 
+export const usageLogsRelations = relations(usageLogs, ({ one }) => ({
+  company: one(companies, {
+    fields: [usageLogs.companyId],
+    references: [companies.id]
+  }),
+  user: one(users, {
+    fields: [usageLogs.userId],
+    references: [users.id]
+  }),
+  model: one(models, {
+    fields: [usageLogs.modelId],
+    references: [models.id]
+  }),
+  assistantPreset: one(assistantPresets, {
+    fields: [usageLogs.assistantPresetId],
+    references: [assistantPresets.id]
+  })
+}))
+
 // ============ 审计日志表 ============
 
 /**
@@ -521,5 +583,99 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   user: one(users, {
     fields: [auditLogs.userId],
     references: [users.id]
+  })
+}))
+
+// ============ 提示词助手预设标签表 ============
+
+export const assistantPresetTags = pgTable(
+  'assistant_preset_tags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 50 }).notNull(),
+    locale: varchar('locale', { length: 10 }).notNull(),
+    order: integer('order').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('assistant_preset_tags_company_id_idx').on(table.companyId),
+    index('assistant_preset_tags_company_locale_idx').on(table.companyId, table.locale)
+  ]
+)
+
+// ============ 提示词助手预设表 ============
+
+export const assistantPresets = pgTable(
+  'assistant_presets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 200 }).notNull(),
+    emoji: varchar('emoji', { length: 50 }),
+    description: text('description'),
+    prompt: text('prompt').notNull(),
+    locale: varchar('locale', { length: 10 }).notNull(),
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    order: integer('order').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('assistant_presets_company_id_idx').on(table.companyId),
+    index('assistant_presets_company_locale_idx').on(table.companyId, table.locale)
+  ]
+)
+
+// ============ 提示词助手预设-标签关联表 ============
+
+export const assistantPresetTagRelations_table = pgTable(
+  'assistant_preset_tag_relations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    presetId: uuid('preset_id')
+      .notNull()
+      .references(() => assistantPresets.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => assistantPresetTags.id, { onDelete: 'cascade' })
+  },
+  (table) => [
+    index('assistant_preset_tag_relations_preset_id_idx').on(table.presetId),
+    index('assistant_preset_tag_relations_tag_id_idx').on(table.tagId)
+  ]
+)
+
+// ============ 提示词助手预设关系定义 ============
+
+export const assistantPresetTagsRelations = relations(assistantPresetTags, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [assistantPresetTags.companyId],
+    references: [companies.id]
+  }),
+  presetRelations: many(assistantPresetTagRelations_table)
+}))
+
+export const assistantPresetsRelations = relations(assistantPresets, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [assistantPresets.companyId],
+    references: [companies.id]
+  }),
+  tagRelations: many(assistantPresetTagRelations_table)
+}))
+
+export const assistantPresetTagRelationsRelations = relations(assistantPresetTagRelations_table, ({ one }) => ({
+  preset: one(assistantPresets, {
+    fields: [assistantPresetTagRelations_table.presetId],
+    references: [assistantPresets.id]
+  }),
+  tag: one(assistantPresetTags, {
+    fields: [assistantPresetTagRelations_table.tagId],
+    references: [assistantPresetTags.id]
   })
 }))

@@ -1,5 +1,11 @@
 import * as z from 'zod'
 
+// 导出助手预设 Schema
+export * from './assistant-presets'
+
+// 导出远程模型获取 Schema
+export * from './fetch-models'
+
 // ============ 基础 Schema ============
 
 export const paginationParamsSchema = z.object({
@@ -65,7 +71,8 @@ export const rolePermissionsSchema = z.object({
   knowledgeBases: z.array(z.enum(['read', 'write', 'admin'])).default([]),
   users: z.array(z.enum(['read', 'write', 'admin'])).default([]),
   statistics: z.array(z.enum(['read', 'export'])).default([]),
-  system: z.array(z.enum(['backup', 'restore', 'settings'])).default([])
+  system: z.array(z.enum(['backup', 'restore', 'settings'])).default([]),
+  assistantPresets: z.array(z.enum(['read', 'write', 'admin'])).default([])
 })
 
 export const createRoleSchema = z.object({
@@ -122,6 +129,8 @@ export const createModelSchema = z.object({
 })
 
 export const updateModelSchema = z.object({
+  providerId: z.string().min(1).optional(),
+  name: z.string().min(1).max(100).optional(),
   displayName: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   apiKey: z.string().min(1).optional(),
@@ -175,17 +184,29 @@ export const searchKnowledgeBaseSchema = z.object({
   scoreThreshold: z.number().min(0).max(1).default(0.7)
 })
 
+// ============ 模型定价 Schema ============
+
+export const setPricingSchema = z.object({
+  inputPerMillionTokens: z.number().min(0),
+  outputPerMillionTokens: z.number().min(0),
+  currency: z.enum(['CNY', 'USD']).default('CNY'),
+  note: z.string().max(500).optional()
+})
+
+export type SetPricingInput = z.infer<typeof setPricingSchema>
+
 // ============ 对话 Schema ============
 
 export const chatMessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
-  content: z.string().min(1)
+  content: z.union([z.string().min(1), z.array(z.record(z.unknown())).min(1)])
 })
 
 export const chatRequestSchema = z.object({
-  modelId: z.string().uuid(),
+  modelId: z.string().uuid().optional(),
   messages: z.array(chatMessageSchema).min(1),
   conversationId: z.string().uuid().optional(),
+  assistantPresetId: z.string().uuid().optional(),
   stream: z.boolean().default(true),
   knowledgeBaseIds: z.array(z.string().uuid()).optional(),
   config: modelConfigSchema.optional()
@@ -199,6 +220,7 @@ export const usageQuerySchema = z.object({
   userId: z.string().uuid().optional(),
   modelId: z.string().uuid().optional(),
   departmentId: z.string().uuid().optional(),
+  assistantPresetId: z.string().uuid().optional(),
   groupBy: z.enum(['day', 'week', 'month', 'user', 'model', 'department']).optional()
 })
 
@@ -230,6 +252,25 @@ export const restoreBackupSchema = z.object({
 
 // ============ 企业设置 Schema ============
 
+export const feishuAutoRegisterSchema = z.object({
+  enabled: z.boolean().default(false),
+  defaultDepartmentId: z.string().uuid(),
+  defaultRoleId: z.string().uuid(),
+  defaultStatus: z.enum(['active', 'inactive']).default('active')
+})
+
+export const defaultModelRefSchema = z.object({
+  modelId: z.string().uuid(),
+  modelName: z.string().min(1),
+  providerId: z.string().min(1)
+})
+
+export const defaultModelsConfigSchema = z.object({
+  defaultAssistantModel: defaultModelRefSchema.optional(),
+  quickModel: defaultModelRefSchema.optional(),
+  translateModel: defaultModelRefSchema.optional()
+})
+
 export const companySettingsSchema = z.object({
   maxUsers: z.number().int().min(1),
   maxStorage: z.number().int().min(0),
@@ -244,7 +285,9 @@ export const companySettingsSchema = z.object({
         .optional(),
       name: z.string().max(50).optional()
     })
-    .optional()
+    .optional(),
+  feishuAutoRegister: feishuAutoRegisterSchema.optional(),
+  defaultModels: defaultModelsConfigSchema.optional()
 })
 
 // ============ 导出类型 ============
@@ -270,4 +313,7 @@ export type UsageQueryInput = z.infer<typeof usageQuerySchema>
 export type AuditLogQueryInput = z.infer<typeof auditLogQuerySchema>
 export type CreateBackupInput = z.infer<typeof createBackupSchema>
 export type RestoreBackupInput = z.infer<typeof restoreBackupSchema>
+export type FeishuAutoRegisterInput = z.infer<typeof feishuAutoRegisterSchema>
 export type CompanySettingsInput = z.infer<typeof companySettingsSchema>
+export type DefaultModelRefInput = z.infer<typeof defaultModelRefSchema>
+export type DefaultModelsConfigInput = z.infer<typeof defaultModelsConfigSchema>

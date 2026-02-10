@@ -21,7 +21,7 @@ pool.on('error', (err) => {
   logger.error({ err }, 'Database pool error')
 })
 
-export const db = drizzle(pool, { schema })
+export const db = drizzle(pool, { schema, logger: true })
 
 export async function testConnection(): Promise<boolean> {
   try {

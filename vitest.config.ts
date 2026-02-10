@@ -68,6 +68,18 @@ export default defineConfig({
             'packages/shared/**/__tests__/**/*.{test,spec}.{ts,tsx}'
           ]
         }
+      },
+      // enterprise-shared 包单元测试配置
+      {
+        extends: true,
+        test: {
+          name: 'enterprise-shared',
+          environment: 'node',
+          include: [
+            'packages/enterprise-shared/**/*.{test,spec}.{ts,tsx}',
+            'packages/enterprise-shared/**/__tests__/**/*.{test,spec}.{ts,tsx}'
+          ]
+        }
       }
     ],
     // 全局共享配置

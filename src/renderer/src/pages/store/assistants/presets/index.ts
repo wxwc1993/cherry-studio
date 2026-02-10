@@ -1,7 +1,9 @@
 import { loggerService } from '@logger'
+import { useEnterpriseAssistantPresets } from '@renderer/hooks/useEnterpriseAssistantPresets'
 import { useRuntime } from '@renderer/hooks/useRuntime'
 import { useSettings } from '@renderer/hooks/useSettings'
 import store from '@renderer/store'
+import { selectIsAuthenticated, selectIsEnterpriseMode } from '@renderer/store/enterprise'
 import type { AssistantPreset } from '@renderer/types'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -26,7 +28,10 @@ export const getAgentsFromSystemAgents = (systemAgents: any) => {
   return agents
 }
 
-export function useSystemAssistantPresets() {
+/**
+ * 非企业模式下从本地 JSON 文件/远程订阅地址加载系统助手预设。
+ */
+function useLocalSystemAssistantPresets(): AssistantPreset[] {
   const { defaultAgent: defaultPreset } = useSettings()
   const [presets, setPresets] = useState<AssistantPreset[]>([])
   const { resourcesPath } = useRuntime()
@@ -77,6 +82,25 @@ export function useSystemAssistantPresets() {
   }, [defaultPreset, resourcesPath, agentssubscribeUrl, currentLanguage])
 
   return presets
+}
+
+/**
+ * 获取系统助手预设数据。
+ * 企业模式且已认证时从服务端获取，否则使用本地 JSON 文件。
+ */
+export function useSystemAssistantPresets(): AssistantPreset[] {
+  const state = store.getState()
+  const isEnterpriseMode = selectIsEnterpriseMode(state)
+  const isAuthenticated = selectIsAuthenticated(state)
+
+  const enterprisePresets = useEnterpriseAssistantPresets()
+  const localPresets = useLocalSystemAssistantPresets()
+
+  if (isEnterpriseMode && isAuthenticated) {
+    return enterprisePresets
+  }
+
+  return localPresets
 }
 
 export function groupByCategories(data: AssistantPreset[]) {

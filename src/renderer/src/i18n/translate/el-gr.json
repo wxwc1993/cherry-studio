@@ -1876,7 +1876,8 @@
     "assistant": {
       "added": {
         "content": "Ο βοηθός προστέθηκε επιτυχώς"
-      }
+      },
+      "already_added": "[to be translated]:This assistant preset has already been added"
     },
     "attachments": {
       "pasted_image": "Εικόνα στο πινάκιδα",
@@ -4188,6 +4189,7 @@
           "noServerConfig": "[to be translated]:Enterprise server not configured, please contact your administrator",
           "passwordRequired": "[to be translated]:Please enter password",
           "serverRequired": "[to be translated]:Please enter the enterprise server URL",
+          "timeout": "[to be translated]:Login timed out, please try again",
           "usernameRequired": "[to be translated]:Please enter username"
         },
         "feishuLogin": "[to be translated]:Feishu Login",
@@ -4709,6 +4711,7 @@
       "default_assistant_model": "Πρόεδρος Υπηρεσίας προεπιλεγμένου μοντέλου",
       "default_assistant_model_description": "Το μοντέλο που χρησιμοποιείται όταν δημιουργείτε νέο υπάλληλο. Αν το υπάλληλο δεν έχει επιλεγμένο ένα μοντέλο, τότε θα χρησιμοποιεί αυτό το μοντέλο.",
       "empty": "Δεν υπάρχουν μοντέλα",
+      "enterprise_managed": "[to be translated]:Managed by enterprise admin",
       "manage": {
         "add_listed": {
           "confirm": "Είστε βέβαιοι ότι θέλετε να προσθέσετε όλα τα μοντέλα στη λίστα;",
@@ -4991,6 +4994,9 @@
       },
       "docs_check": "Άνοιγμα",
       "docs_more_details": "Λάβετε περισσότερες λεπτομέρειες",
+      "enterprise": {
+        "no_models": "[to be translated]:No models configured by administrator"
+      },
       "enterprise_managed": "[to be translated]:This provider is managed by your enterprise administrator",
       "enterprise_managed_tooltip": "[to be translated]:In enterprise mode, provider settings are centrally managed",
       "get_api_key": "Κάντε κλικ εδώ για να πάρετε κλειδί",

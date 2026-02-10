@@ -450,12 +450,39 @@ function createDeveloperToSystemFetch(originalFetch?: typeof fetch): typeof fetc
 }
 
 /**
+ * 企业统计元数据，用于在请求中注入 conversationId 和 assistantPresetId
+ */
+export interface EnterpriseStatMetadata {
+  topicId?: string
+  assistantPresetId?: string
+}
+
+/**
  * 准备特殊provider的配置,主要用于异步处理的配置
+ *
+ * @param provider - 适配后的 Provider 对象
+ * @param config - AI SDK 配置
+ * @param model - 可选的 Model 对象，企业 Provider 需要用于 URL 重写
+ * @param metadata - 可选的统计元数据，企业 Provider 需要注入到请求体中
  */
 export async function prepareSpecialProviderConfig(
   provider: Provider,
-  config: ReturnType<typeof providerToAiSdkConfig>
+  config: ReturnType<typeof providerToAiSdkConfig>,
+  model?: Model,
+  metadata?: EnterpriseStatMetadata
 ) {
+  // 处理企业 Provider（id 以 'enterprise-' 开头）
+  if (provider.id.startsWith('enterprise-') && model) {
+    const enterpriseState = store.getState().enterprise
+    const serverUrl = enterpriseState?.enterpriseServer || ''
+    const { createEnterpriseFetch } = await import('@renderer/services/createEnterpriseFetch')
+    config.options.fetch = createEnterpriseFetch(model.id, serverUrl, {
+      conversationId: metadata?.topicId,
+      assistantPresetId: metadata?.assistantPresetId
+    })
+    return config
+  }
+
   switch (provider.id) {
     case 'copilot': {
       const defaultHeaders = store.getState().copilot.defaultHeaders ?? {}

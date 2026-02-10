@@ -222,7 +222,7 @@ ENCRYPTION_KEY=your-32-char-encryption-key-here
 # 飞书 OAuth
 FEISHU_APP_ID=your-feishu-app-id
 FEISHU_APP_SECRET=your-feishu-app-secret
-FEISHU_REDIRECT_URI=http://localhost:3000/auth/feishu/callback
+FEISHU_REDIRECT_URI=http://localhost:3000/api/v1/auth/feishu/callback
 
 # JWT 配置
 JWT_SECRET=your-jwt-secret-key-here

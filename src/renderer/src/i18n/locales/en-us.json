@@ -1876,7 +1876,8 @@
     "assistant": {
       "added": {
         "content": "Assistant added successfully"
-      }
+      },
+      "already_added": "This assistant preset has already been added"
     },
     "attachments": {
       "pasted_image": "Pasted Image",
@@ -4188,6 +4189,7 @@
           "noServerConfig": "Enterprise server not configured, please contact your administrator",
           "passwordRequired": "Please enter password",
           "serverRequired": "Please enter the enterprise server URL",
+          "timeout": "Login timed out, please try again",
           "usernameRequired": "Please enter username"
         },
         "feishuLogin": "Feishu Login",
@@ -4709,6 +4711,7 @@
       "default_assistant_model": "Default Assistant Model",
       "default_assistant_model_description": "Model used when creating a new assistant, if the assistant is not set, this model will be used",
       "empty": "No models found",
+      "enterprise_managed": "Managed by enterprise admin",
       "manage": {
         "add_listed": {
           "confirm": "Are you sure you want to add all models to the list?",

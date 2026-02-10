@@ -1,3 +1,45 @@
+/* ========================================================================
+   Cherry Studio Admin — Dark Futuristic Theme
+   ======================================================================== */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+/* ── CSS Custom Properties ── */
+:root {
+  /* Primary */
+  --cs-primary: #6366f1;
+  --cs-primary-hover: #818cf8;
+  --cs-accent: #06b6d4;
+  --cs-success: #10b981;
+  --cs-warning: #f59e0b;
+  --cs-error: #ef4444;
+
+  /* Backgrounds */
+  --cs-bg-0: #0a0e1a;
+  --cs-bg-1: #111827;
+  --cs-bg-2: #1f2937;
+  --cs-bg-3: #374151;
+
+  /* Text */
+  --cs-text-1: #e0e8ff;
+  --cs-text-2: #94a3b8;
+  --cs-text-3: #64748b;
+
+  /* Borders */
+  --cs-border: #1e293b;
+  --cs-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Effects */
+  --cs-glow: rgba(99, 102, 241, 0.4);
+
+  /* Fonts */
+  --cs-font-heading: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --cs-font-body: 'DM Sans', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --cs-font-mono: 'Fira Code', 'Noto Sans SC', monospace;
+}
+
+/* ── Reset ── */
 * {
   margin: 0;
   padding: 0;
@@ -11,9 +53,259 @@ body,
 }
 
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  font-family: var(--cs-font-body);
+  background: var(--cs-bg-0);
+  color: var(--cs-text-1);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Utility Classes ── */
+
+/* Glass morphism card */
+.glass-card {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--cs-border-subtle);
+  border-radius: 12px;
+  transition: all 0.2s ease-out;
+}
+
+.glass-card:hover {
+  box-shadow:
+    0 0 20px rgba(99, 102, 241, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Glow border on hover */
+.glow-border {
+  transition: box-shadow 0.2s ease-out;
+}
+
+.glow-border:hover {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Stat card with left color strip */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+  background: var(--stat-color, var(--cs-primary));
+}
+
+/* Fade-in animation */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse animation for status indicators */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Ant Design Overrides ── */
+
+/* Cards — glass morphism */
+.ant-card {
+  background: rgba(17, 24, 39, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--cs-border-subtle) !important;
+  transition: all 0.2s ease-out;
+}
+
+.ant-card:hover {
+  box-shadow:
+    0 0 20px rgba(99, 102, 241, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.ant-card .ant-card-head {
+  border-bottom-color: var(--cs-border) !important;
+}
+
+.ant-card .ant-card-head-title {
+  font-family: var(--cs-font-heading);
+  font-weight: 600;
+  color: var(--cs-text-1);
+}
+
+/* Table — dark header + row hover */
+.ant-table {
+  background: transparent !important;
+}
+
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > td {
+  background: var(--cs-bg-2) !important;
+  color: var(--cs-text-2) !important;
+  border-bottom-color: var(--cs-border) !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom-color: var(--cs-border) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(99, 102, 241, 0.06) !important;
+}
+
+/* Modal — dark */
+.ant-modal-content {
+  background: var(--cs-bg-1) !important;
+  border: 1px solid var(--cs-border-subtle);
+}
+
+.ant-modal-header {
+  background: var(--cs-bg-1) !important;
+  border-bottom-color: var(--cs-border) !important;
+}
+
+.ant-modal-footer {
+  border-top-color: var(--cs-border) !important;
+}
+
+/* Menu — dark selection glow */
+.ant-menu-dark .ant-menu-item-selected {
+  box-shadow: inset 3px 0 0 var(--cs-primary);
+}
+
+/* Tabs — accent ink bar */
+.ant-tabs .ant-tabs-ink-bar {
+  background: linear-gradient(90deg, var(--cs-primary), var(--cs-accent)) !important;
+  height: 3px !important;
+  border-radius: 3px;
+}
+
+/* Statistic — heading font */
+.ant-statistic .ant-statistic-content-value {
+  font-family: var(--cs-font-heading);
+}
+
+/* Tag — subtle dark */
+.ant-tag {
+  border-color: var(--cs-border-subtle) !important;
+}
+
+/* Popover / Tooltip / Dropdown — dark */
+.ant-popover-inner,
+.ant-dropdown-menu,
+.ant-select-dropdown {
+  background: var(--cs-bg-2) !important;
+  border: 1px solid var(--cs-border-subtle);
+}
+
+/* Form labels */
+.ant-form-item-label > label {
+  color: var(--cs-text-2) !important;
+}
+
+/* Input focus glow */
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-picker-focused,
+.ant-select-focused .ant-select-selector {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Pagination */
+.ant-pagination .ant-pagination-item-active {
+  border-color: var(--cs-primary) !important;
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+.ant-pagination .ant-pagination-item-active a {
+  color: var(--cs-primary-hover) !important;
+}
+
+/* Spin */
+.ant-spin-dot-item {
+  background-color: var(--cs-primary) !important;
+}
+
+/* Message */
+.ant-message-notice-content {
+  background: var(--cs-bg-2) !important;
+  border: 1px solid var(--cs-border-subtle);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Focus Ring ── */
+*:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar (WebKit) ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cs-bg-3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cs-text-3);
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

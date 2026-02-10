@@ -1,14 +1,36 @@
 import { createSuccessResponse, usageQuerySchema } from '@cherry-studio/enterprise-shared'
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, isNotNull, lte, sql } from 'drizzle-orm'
 import { Router } from 'express'
 
 import { authenticate, requirePermission } from '../middleware/auth'
 import { validate } from '../middleware/validate'
-import { conversations, db, models, usageLogs, users } from '../models'
+import { assistantPresets, db, departments, models, usageLogs, users } from '../models'
 import { createLogger } from '../utils/logger'
 
 const router = Router()
-const _logger = createLogger('StatisticsRoutes')
+const logger = createLogger('StatisticsRoutes')
+
+/**
+ * 将日期转换为 UTC 当天 00:00:00.000
+ * 使用 UTC 方法避免服务器本地时区偏移导致查询范围错误
+ */
+function toStartOfDayUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0))
+}
+
+/**
+ * 将日期转换为 UTC 当天 23:59:59.999
+ * 使用 UTC 方法避免服务器本地时区偏移导致查询范围错误
+ */
+function toEndOfDayUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999))
+}
+
+/**
+ * 统一费用聚合表达式（CNY）
+ * USD 按固定汇率 $1 = ¥7 转换
+ */
+const costCnySql = sql<number>`sum(CASE WHEN ${usageLogs.currency} = 'USD' THEN ${usageLogs.cost} * 7 ELSE ${usageLogs.cost} END)`
 
 router.use(authenticate)
 router.use(requirePermission('statistics', 'read'))
@@ -21,9 +43,9 @@ router.get('/overview', async (req, res, next) => {
   try {
     const companyId = req.user!.companyId
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+    const now = new Date()
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0))
 
     const [totalUsers, activeUsers, totalModels, totalConversations, todayUsage, monthUsage, totalUsage] =
       await Promise.all([
@@ -45,19 +67,18 @@ router.get('/overview', async (req, res, next) => {
           .from(models)
           .where(eq(models.companyId, companyId)),
 
-        // 对话数
+        // 请求总数（替代原来查空的 conversations 表）
         db
           .select({ count: sql<number>`count(*)` })
-          .from(conversations)
-          .innerJoin(users, eq(conversations.userId, users.id))
-          .where(eq(users.companyId, companyId)),
+          .from(usageLogs)
+          .where(eq(usageLogs.companyId, companyId)),
 
         // 今日用量
         db
           .select({
             requests: sql<number>`count(*)`,
             tokens: sql<number>`sum(total_tokens)`,
-            cost: sql<number>`sum(cost)`
+            cost: costCnySql
           })
           .from(usageLogs)
           .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, today))),
@@ -67,7 +88,7 @@ router.get('/overview', async (req, res, next) => {
           .select({
             requests: sql<number>`count(*)`,
             tokens: sql<number>`sum(total_tokens)`,
-            cost: sql<number>`sum(cost)`
+            cost: costCnySql
           })
           .from(usageLogs)
           .where(and(eq(usageLogs.companyId, companyId), gte(usageLogs.createdAt, monthStart))),
@@ -77,7 +98,7 @@ router.get('/overview', async (req, res, next) => {
           .select({
             requests: sql<number>`count(*)`,
             tokens: sql<number>`sum(total_tokens)`,
-            cost: sql<number>`sum(cost)`
+            cost: costCnySql
           })
           .from(usageLogs)
           .where(eq(usageLogs.companyId, companyId))
@@ -121,48 +142,73 @@ router.get('/overview', async (req, res, next) => {
  */
 router.get('/usage', validate(usageQuerySchema, 'query'), async (req, res, next) => {
   try {
-    const { startDate, endDate, groupBy, userId, modelId } = req.query as any
+    const { startDate, endDate, groupBy, userId, modelId, departmentId, assistantPresetId } = req.query as any
     const companyId = req.user!.companyId
+
+    logger.info({ query: req.query, companyId }, 'Statistics /usage request')
 
     let groupByClause: string
 
     switch (groupBy) {
       case 'week':
-        groupByClause = `date_trunc('week', created_at)`
+        groupByClause = `date_trunc('week', ${usageLogs.createdAt.name})`
         break
       case 'month':
-        groupByClause = `date_trunc('month', created_at)`
+        groupByClause = `date_trunc('month', ${usageLogs.createdAt.name})`
         break
       case 'day':
       default:
-        groupByClause = `date_trunc('day', created_at)`
+        groupByClause = `date_trunc('day', ${usageLogs.createdAt.name})`
     }
 
-    const conditions = [
+    const conditions: any[] = [
       eq(usageLogs.companyId, companyId),
-      gte(usageLogs.createdAt, new Date(startDate)),
-      lte(usageLogs.createdAt, new Date(endDate))
+      gte(usageLogs.createdAt, toStartOfDayUTC(new Date(startDate))),
+      lte(usageLogs.createdAt, toEndOfDayUTC(new Date(endDate)))
     ]
 
     if (userId) conditions.push(eq(usageLogs.userId, userId))
     if (modelId) conditions.push(eq(usageLogs.modelId, modelId))
+    if (assistantPresetId) conditions.push(eq(usageLogs.assistantPresetId, assistantPresetId))
 
-    const result = await db
+    // 部门筛选需要 JOIN users + departments
+    const needsDeptJoin = Boolean(departmentId)
+
+    let query = db
       .select({
         date: sql<string>`${sql.raw(groupByClause)}::date`,
         requests: sql<number>`count(*)`,
-        tokens: sql<number>`sum(total_tokens)`,
-        cost: sql<number>`sum(cost)`,
-        avgLatency: sql<number>`avg(duration)`
+        tokens: sql<number>`sum(${usageLogs.totalTokens})`,
+        cost: costCnySql,
+        avgLatency: sql<number>`avg(${usageLogs.duration})`
       })
       .from(usageLogs)
+
+    if (needsDeptJoin) {
+      query = query
+        .leftJoin(users, eq(usageLogs.userId, users.id))
+        .leftJoin(departments, eq(users.departmentId, departments.id)) as any
+
+      // 通过 path LIKE 实现子部门递归包含
+      const [dept] = await db
+        .select({ path: departments.path })
+        .from(departments)
+        .where(eq(departments.id, departmentId))
+      if (dept) {
+        conditions.push(sql`${departments.path} LIKE ${dept.path + '%'}`)
+      }
+    }
+
+    const result = await (query as any)
       .where(and(...conditions))
       .groupBy(sql`${sql.raw(groupByClause)}`)
       .orderBy(sql`${sql.raw(groupByClause)}`)
 
+    logger.info({ resultCount: result.length, firstRow: result[0] }, 'Statistics /usage result')
+
     res.json(
       createSuccessResponse(
-        result.map((r) => ({
+        result.map((r: any) => ({
           date: r.date,
           requests: Number(r.requests),
           tokens: Number(r.tokens || 0),
@@ -182,35 +228,55 @@ router.get('/usage', validate(usageQuerySchema, 'query'), async (req, res, next)
  */
 router.get('/models', validate(usageQuerySchema, 'query'), async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query as any
+    const { startDate, endDate, departmentId } = req.query as any
     const companyId = req.user!.companyId
 
-    const result = await db
+    logger.info({ query: req.query, companyId }, 'Statistics /models request')
+
+    const conditions: any[] = [
+      eq(usageLogs.companyId, companyId),
+      gte(usageLogs.createdAt, toStartOfDayUTC(new Date(startDate))),
+      lte(usageLogs.createdAt, toEndOfDayUTC(new Date(endDate)))
+    ]
+
+    let query = db
       .select({
         modelId: usageLogs.modelId,
-        modelName: models.displayName,
+        modelName: sql<string>`COALESCE(${models.displayName}, '已删除模型')`,
         requests: sql<number>`count(*)`,
         tokens: sql<number>`sum(${usageLogs.totalTokens})`,
-        cost: sql<number>`sum(${usageLogs.cost})`,
+        cost: costCnySql,
         avgLatency: sql<number>`avg(${usageLogs.duration})`
       })
       .from(usageLogs)
-      .innerJoin(models, eq(usageLogs.modelId, models.id))
-      .where(
-        and(
-          eq(usageLogs.companyId, companyId),
-          gte(usageLogs.createdAt, new Date(startDate)),
-          lte(usageLogs.createdAt, new Date(endDate))
-        )
-      )
+      .leftJoin(models, eq(usageLogs.modelId, models.id))
+
+    if (departmentId) {
+      query = query
+        .leftJoin(users, eq(usageLogs.userId, users.id))
+        .leftJoin(departments, eq(users.departmentId, departments.id)) as any
+
+      const [dept] = await db
+        .select({ path: departments.path })
+        .from(departments)
+        .where(eq(departments.id, departmentId))
+      if (dept) {
+        conditions.push(sql`${departments.path} LIKE ${dept.path + '%'}`)
+      }
+    }
+
+    const result = await (query as any)
+      .where(and(...conditions))
       .groupBy(usageLogs.modelId, models.displayName)
       .orderBy(desc(sql`count(*)`))
 
+    logger.info({ resultCount: result.length, firstRow: result[0] }, 'Statistics /models result')
+
     res.json(
       createSuccessResponse(
-        result.map((r) => ({
+        result.map((r: any) => ({
           modelId: r.modelId,
-          modelName: r.modelName,
+          modelName: r.modelName ?? '已删除模型',
           requests: Number(r.requests),
           tokens: Number(r.tokens || 0),
           cost: Number(r.cost || 0),
@@ -229,35 +295,52 @@ router.get('/models', validate(usageQuerySchema, 'query'), async (req, res, next
  */
 router.get('/users', validate(usageQuerySchema, 'query'), async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query as any
+    const { startDate, endDate, departmentId } = req.query as any
     const companyId = req.user!.companyId
+
+    logger.info({ query: req.query, companyId }, 'Statistics /users request')
+
+    const conditions: any[] = [
+      eq(usageLogs.companyId, companyId),
+      gte(usageLogs.createdAt, toStartOfDayUTC(new Date(startDate))),
+      lte(usageLogs.createdAt, toEndOfDayUTC(new Date(endDate)))
+    ]
+
+    if (departmentId) {
+      const [dept] = await db
+        .select({ path: departments.path })
+        .from(departments)
+        .where(eq(departments.id, departmentId))
+      if (dept) {
+        conditions.push(sql`${departments.path} LIKE ${dept.path + '%'}`)
+      }
+    }
 
     const result = await db
       .select({
         userId: usageLogs.userId,
         userName: users.name,
+        departmentName: departments.name,
         requests: sql<number>`count(*)`,
         tokens: sql<number>`sum(${usageLogs.totalTokens})`,
-        cost: sql<number>`sum(${usageLogs.cost})`
+        cost: costCnySql
       })
       .from(usageLogs)
-      .innerJoin(users, eq(usageLogs.userId, users.id))
-      .where(
-        and(
-          eq(usageLogs.companyId, companyId),
-          gte(usageLogs.createdAt, new Date(startDate)),
-          lte(usageLogs.createdAt, new Date(endDate))
-        )
-      )
-      .groupBy(usageLogs.userId, users.name)
+      .leftJoin(users, eq(usageLogs.userId, users.id))
+      .leftJoin(departments, eq(users.departmentId, departments.id))
+      .where(and(...conditions))
+      .groupBy(usageLogs.userId, users.name, departments.name)
       .orderBy(desc(sql`sum(${usageLogs.totalTokens})`))
       .limit(50)
+
+    logger.info({ resultCount: result.length, firstRow: result[0] }, 'Statistics /users result')
 
     res.json(
       createSuccessResponse(
         result.map((r) => ({
           userId: r.userId,
-          userName: r.userName,
+          userName: r.userName ?? '未知用户',
+          department: r.departmentName ?? '未分配部门',
           requests: Number(r.requests),
           tokens: Number(r.tokens || 0),
           cost: Number(r.cost || 0)
@@ -279,31 +362,43 @@ router.get(
   validate(usageQuerySchema, 'query'),
   async (req, res, next) => {
     try {
-      const { startDate, endDate } = req.query as any
+      const { startDate, endDate, departmentId } = req.query as any
       const companyId = req.user!.companyId
+
+      const conditions: any[] = [
+        eq(usageLogs.companyId, companyId),
+        gte(usageLogs.createdAt, toStartOfDayUTC(new Date(startDate))),
+        lte(usageLogs.createdAt, toEndOfDayUTC(new Date(endDate)))
+      ]
+
+      if (departmentId) {
+        const [dept] = await db
+          .select({ path: departments.path })
+          .from(departments)
+          .where(eq(departments.id, departmentId))
+        if (dept) {
+          conditions.push(sql`${departments.path} LIKE ${dept.path + '%'}`)
+        }
+      }
 
       const result = await db
         .select({
           date: usageLogs.createdAt,
           userName: users.name,
           userEmail: users.email,
+          departmentName: departments.name,
           modelName: models.displayName,
           inputTokens: usageLogs.inputTokens,
           outputTokens: usageLogs.outputTokens,
           totalTokens: usageLogs.totalTokens,
-          cost: usageLogs.cost,
+          cost: sql<number>`CASE WHEN ${usageLogs.currency} = 'USD' THEN ${usageLogs.cost} * 7 ELSE ${usageLogs.cost} END`,
           duration: usageLogs.duration
         })
         .from(usageLogs)
-        .innerJoin(users, eq(usageLogs.userId, users.id))
-        .innerJoin(models, eq(usageLogs.modelId, models.id))
-        .where(
-          and(
-            eq(usageLogs.companyId, companyId),
-            gte(usageLogs.createdAt, new Date(startDate)),
-            lte(usageLogs.createdAt, new Date(endDate))
-          )
-        )
+        .leftJoin(users, eq(usageLogs.userId, users.id))
+        .leftJoin(departments, eq(users.departmentId, departments.id))
+        .leftJoin(models, eq(usageLogs.modelId, models.id))
+        .where(and(...conditions))
         .orderBy(usageLogs.createdAt)
 
       // 生成 CSV
@@ -311,6 +406,7 @@ router.get(
         'Date',
         'User',
         'Email',
+        'Department',
         'Model',
         'Input Tokens',
         'Output Tokens',
@@ -320,9 +416,10 @@ router.get(
       ]
       const rows = result.map((r) => [
         r.date.toISOString(),
-        r.userName,
-        r.userEmail,
-        r.modelName,
+        r.userName ?? '',
+        r.userEmail ?? '',
+        r.departmentName ?? '',
+        r.modelName ?? '',
         r.inputTokens,
         r.outputTokens,
         r.totalTokens,
@@ -340,5 +437,145 @@ router.get(
     }
   }
 )
+
+/**
+ * 按部门统计
+ * GET /statistics/departments
+ */
+router.get('/departments', validate(usageQuerySchema, 'query'), async (req, res, next) => {
+  try {
+    const { startDate, endDate, departmentId: filterDeptId } = req.query as any
+    const companyId = req.user!.companyId
+
+    logger.info({ query: req.query, companyId }, 'Statistics /departments request')
+
+    const conditions: any[] = [
+      eq(usageLogs.companyId, companyId),
+      gte(usageLogs.createdAt, toStartOfDayUTC(new Date(startDate))),
+      lte(usageLogs.createdAt, toEndOfDayUTC(new Date(endDate)))
+    ]
+
+    // 如果指定了部门，递归包含子部门
+    if (filterDeptId) {
+      const [dept] = await db
+        .select({ path: departments.path })
+        .from(departments)
+        .where(eq(departments.id, filterDeptId))
+      if (dept) {
+        conditions.push(sql`${departments.path} LIKE ${dept.path + '%'}`)
+      }
+    }
+
+    conditions.push(isNotNull(departments.id))
+
+    const result = await db
+      .select({
+        departmentId: departments.id,
+        departmentName: departments.name,
+        path: departments.path,
+        parentId: departments.parentId,
+        requests: sql<number>`count(*)`,
+        tokens: sql<number>`sum(${usageLogs.totalTokens})`,
+        cost: costCnySql,
+        userCount: sql<number>`count(distinct ${usageLogs.userId})`
+      })
+      .from(usageLogs)
+      .leftJoin(users, eq(usageLogs.userId, users.id))
+      .leftJoin(departments, eq(users.departmentId, departments.id))
+      .where(and(...conditions))
+      .groupBy(departments.id, departments.name, departments.path, departments.parentId)
+      .orderBy(desc(sql`count(*)`))
+
+    logger.info({ resultCount: result.length, firstRow: result[0] }, 'Statistics /departments result')
+
+    res.json(
+      createSuccessResponse(
+        result.map((r) => ({
+          departmentId: r.departmentId,
+          departmentName: r.departmentName,
+          path: r.path,
+          parentId: r.parentId,
+          requests: Number(r.requests),
+          tokens: Number(r.tokens || 0),
+          cost: Number(r.cost || 0),
+          userCount: Number(r.userCount)
+        }))
+      )
+    )
+  } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * 助手预设使用统计
+ * GET /statistics/assistant-presets
+ */
+router.get('/assistant-presets', validate(usageQuerySchema, 'query'), async (req, res, next) => {
+  try {
+    const { startDate, endDate, departmentId } = req.query as any
+    const companyId = req.user!.companyId
+
+    logger.info({ query: req.query, companyId }, 'Statistics /assistant-presets request')
+
+    const conditions: any[] = [
+      eq(usageLogs.companyId, companyId),
+      gte(usageLogs.createdAt, toStartOfDayUTC(new Date(startDate))),
+      lte(usageLogs.createdAt, toEndOfDayUTC(new Date(endDate))),
+      isNotNull(usageLogs.assistantPresetId)
+    ]
+
+    let query = db
+      .select({
+        presetId: usageLogs.assistantPresetId,
+        presetName: assistantPresets.name,
+        emoji: assistantPresets.emoji,
+        requests: sql<number>`count(*)`,
+        tokens: sql<number>`sum(${usageLogs.totalTokens})`,
+        cost: costCnySql,
+        uniqueUsers: sql<number>`count(distinct ${usageLogs.userId})`
+      })
+      .from(usageLogs)
+      .leftJoin(assistantPresets, eq(usageLogs.assistantPresetId, assistantPresets.id))
+
+    if (departmentId) {
+      query = query
+        .leftJoin(users, eq(usageLogs.userId, users.id))
+        .leftJoin(departments, eq(users.departmentId, departments.id)) as any
+
+      const [dept] = await db
+        .select({ path: departments.path })
+        .from(departments)
+        .where(eq(departments.id, departmentId))
+      if (dept) {
+        conditions.push(sql`${departments.path} LIKE ${dept.path + '%'}`)
+      }
+    }
+
+    const result = await (query as any)
+      .where(and(...conditions))
+      .groupBy(usageLogs.assistantPresetId, assistantPresets.name, assistantPresets.emoji)
+      .orderBy(desc(sql`count(*)`))
+      .limit(50)
+
+    logger.info({ resultCount: result.length, firstRow: result[0] }, 'Statistics /assistant-presets result')
+
+    res.json(
+      createSuccessResponse(
+        result.map((r: any) => ({
+          presetId: r.presetId,
+          presetName: r.presetName ?? '已删除预设',
+          emoji: r.emoji,
+          requests: Number(r.requests),
+          tokens: Number(r.tokens || 0),
+          cost: Number(r.cost || 0),
+          uniqueUsers: Number(r.uniqueUsers)
+        }))
+      )
+    )
+  } catch (err) {
+    next(err)
+  }
+})
 
 export default router

@@ -6,15 +6,16 @@ import { isEmbeddingModel, isRerankModel, isTextToImageModel } from '@renderer/c
 import { TRANSLATE_PROMPT } from '@renderer/config/prompts'
 import { useTheme } from '@renderer/context/ThemeProvider'
 import { useDefaultModel } from '@renderer/hooks/useAssistant'
+import { useEnterpriseRestrictions } from '@renderer/hooks/useEnterpriseRestrictions'
 import { useProviders } from '@renderer/hooks/useProvider'
 import { useSettings } from '@renderer/hooks/useSettings'
-import { getModelUniqId, hasModel } from '@renderer/services/ModelService'
+import { getModelUniqId } from '@renderer/services/ModelService'
 import { useAppDispatch } from '@renderer/store'
 import { setTranslateModelPrompt } from '@renderer/store/settings'
 import type { Model } from '@renderer/types'
 import { Button, Tooltip } from 'antd'
 import { find } from 'lodash'
-import { Languages, MessageSquareMore, Rocket, Settings2 } from 'lucide-react'
+import { Languages, Lock, MessageSquareMore, Rocket, Settings2 } from 'lucide-react'
 import type { FC } from 'react'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -32,6 +33,7 @@ const ModelSettings: FC = () => {
   const { theme } = useTheme()
   const { t } = useTranslation()
   const { translateModelPrompt } = useSettings()
+  const { isEnterpriseActive } = useEnterpriseRestrictions()
 
   const dispatch = useAppDispatch()
 
@@ -40,16 +42,21 @@ const ModelSettings: FC = () => {
     []
   )
 
+  const findModel = useCallback((m?: Model) => allModels.find((model) => model.id === m?.id), [allModels])
+
   const defaultModelValue = useMemo(
-    () => (hasModel(defaultModel) ? getModelUniqId(defaultModel) : undefined),
-    [defaultModel]
+    () => (findModel(defaultModel) ? getModelUniqId(defaultModel) : undefined),
+    [defaultModel, findModel]
   )
 
-  const defaultQuickModel = useMemo(() => (hasModel(quickModel) ? getModelUniqId(quickModel) : undefined), [quickModel])
+  const defaultQuickModel = useMemo(
+    () => (findModel(quickModel) ? getModelUniqId(quickModel) : undefined),
+    [quickModel, findModel]
+  )
 
   const defaultTranslateModel = useMemo(
-    () => (hasModel(translateModel) ? getModelUniqId(translateModel) : undefined),
-    [translateModel]
+    () => (findModel(translateModel) ? getModelUniqId(translateModel) : undefined),
+    [translateModel, findModel]
   )
 
   const onResetTranslatePrompt = () => {
@@ -63,6 +70,11 @@ const ModelSettings: FC = () => {
           <HStack alignItems="center" gap={10}>
             <MessageSquareMore size={18} color="var(--color-text)" />
             {t('settings.models.default_assistant_model')}
+            {isEnterpriseActive && (
+              <Tooltip title={t('settings.models.enterprise_managed')}>
+                <Lock size={14} color="var(--color-text-secondary)" />
+              </Tooltip>
+            )}
           </HStack>
         </SettingTitle>
         <HStack alignItems="center">
@@ -74,8 +86,11 @@ const ModelSettings: FC = () => {
             style={{ width: 360 }}
             onChange={(value) => setDefaultModel(find(allModels, JSON.parse(value)) as Model)}
             placeholder={t('settings.models.empty')}
+            disabled={isEnterpriseActive}
           />
-          <Button icon={<Settings2 size={16} />} style={{ marginLeft: 8 }} onClick={DefaultAssistantSettings.show} />
+          {!isEnterpriseActive && (
+            <Button icon={<Settings2 size={16} />} style={{ marginLeft: 8 }} onClick={DefaultAssistantSettings.show} />
+          )}
         </HStack>
         <SettingDescription>{t('settings.models.default_assistant_model_description')}</SettingDescription>
       </SettingGroup>
@@ -85,6 +100,11 @@ const ModelSettings: FC = () => {
             <Rocket size={18} color="var(--color-text)" />
             {t('settings.models.quick_model.label')}
             <InfoTooltip title={t('settings.models.quick_model.tooltip')} />
+            {isEnterpriseActive && (
+              <Tooltip title={t('settings.models.enterprise_managed')}>
+                <Lock size={14} color="var(--color-text-secondary)" />
+              </Tooltip>
+            )}
           </HStack>
         </SettingTitle>
         <HStack alignItems="center">
@@ -96,8 +116,11 @@ const ModelSettings: FC = () => {
             style={{ width: 360 }}
             onChange={(value) => setQuickModel(find(allModels, JSON.parse(value)) as Model)}
             placeholder={t('settings.models.empty')}
+            disabled={isEnterpriseActive}
           />
-          <Button icon={<Settings2 size={16} />} style={{ marginLeft: 8 }} onClick={TopicNamingModalPopup.show} />
+          {!isEnterpriseActive && (
+            <Button icon={<Settings2 size={16} />} style={{ marginLeft: 8 }} onClick={TopicNamingModalPopup.show} />
+          )}
         </HStack>
         <SettingDescription>{t('settings.models.quick_model.description')}</SettingDescription>
       </SettingGroup>
@@ -106,6 +129,11 @@ const ModelSettings: FC = () => {
           <HStack alignItems="center" gap={10}>
             <Languages size={18} color="var(--color-text)" />
             {t('settings.models.translate_model')}
+            {isEnterpriseActive && (
+              <Tooltip title={t('settings.models.enterprise_managed')}>
+                <Lock size={14} color="var(--color-text-secondary)" />
+              </Tooltip>
+            )}
           </HStack>
         </SettingTitle>
         <HStack alignItems="center">
@@ -117,13 +145,16 @@ const ModelSettings: FC = () => {
             style={{ width: 360 }}
             onChange={(value) => setTranslateModel(find(allModels, JSON.parse(value)) as Model)}
             placeholder={t('settings.models.empty')}
+            disabled={isEnterpriseActive}
           />
-          <Button
-            icon={<Settings2 size={16} />}
-            style={{ marginLeft: 8 }}
-            onClick={() => TranslateSettingsPopup.show()}
-          />
-          {translateModelPrompt !== TRANSLATE_PROMPT && (
+          {!isEnterpriseActive && (
+            <Button
+              icon={<Settings2 size={16} />}
+              style={{ marginLeft: 8 }}
+              onClick={() => TranslateSettingsPopup.show()}
+            />
+          )}
+          {!isEnterpriseActive && translateModelPrompt !== TRANSLATE_PROMPT && (
             <Tooltip title={t('common.reset')}>
               <Button icon={<RedoOutlined />} style={{ marginLeft: 8 }} onClick={onResetTranslatePrompt}></Button>
             </Tooltip>

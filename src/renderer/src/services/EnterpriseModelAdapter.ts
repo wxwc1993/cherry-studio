@@ -58,7 +58,7 @@ function mapCapabilities(capabilities?: string[]): ModelCapability[] | undefined
     const modelType = typeMap[lowerCap]
     if (modelType && !addedTypes.has(modelType)) {
       addedTypes.add(modelType)
-      result.push({ type: modelType })
+      result.push({ type: modelType, isUserSelected: true })
     }
   }
 
@@ -146,11 +146,6 @@ export function matchProviderNameToSystemId(name: string): string | undefined {
 
   if (legacyMappings[normalized]) {
     return legacyMappings[normalized]
-  }
-
-  // 模糊匹配（兼容自定义供应商名称）
-  for (const [key, value] of Object.entries(legacyMappings)) {
-    if (normalized.includes(key)) return value
   }
 
   return undefined

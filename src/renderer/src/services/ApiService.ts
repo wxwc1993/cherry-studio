@@ -35,7 +35,9 @@ import {
   getProviderByModel,
   getQuickModel
 } from './AssistantService'
+import { chatRouterService } from './ChatRouter'
 import { ConversationService } from './ConversationService'
+import { buildEnterpriseProvider } from './EnterpriseProviderFactory'
 import { injectUserMessageWithKnowledgeSearchPrompt } from './KnowledgeService'
 import type { BlockManager } from './messageStreaming'
 import type { StreamProcessorCallbacks } from './StreamProcessingService'
@@ -202,16 +204,25 @@ export async function fetchChatCompletion({
     modelName: assistant.model?.name
   })
 
-  // Get base provider and apply API key rotation
-  // NOTE: Shallow copy is intentional. Provider objects are not mutated by downstream code.
-  // Nested properties (if any) are never modified after creation.
-  const baseProvider = getProviderByModel(assistant.model || getDefaultModel())
-  const providerWithRotatedKey = {
-    ...baseProvider,
-    apiKey: getRotatedApiKey(baseProvider)
+  // 统一构建 AI Provider：企业模式和个人模式使用相同的 AI Core 管线
+  const model = assistant.model || getDefaultModel()
+  let AI: AiProviderNew
+
+  if (chatRouterService.isEnterpriseChat()) {
+    // 企业模式：构建企业 Provider，走完整 AI Core 管线
+    const enterpriseProvider = buildEnterpriseProvider(model)
+    AI = new AiProviderNew(model, enterpriseProvider)
+  } else {
+    // 个人模式：使用模型关联的 Provider，并应用 API key 轮转
+    // NOTE: Shallow copy is intentional. Provider objects are not mutated by downstream code.
+    const baseProvider = getProviderByModel(model)
+    const providerWithRotatedKey = {
+      ...baseProvider,
+      apiKey: getRotatedApiKey(baseProvider)
+    }
+    AI = new AiProviderNew(model, providerWithRotatedKey)
   }
 
-  const AI = new AiProviderNew(assistant.model || getDefaultModel(), providerWithRotatedKey)
   const provider = AI.getActualProvider()
 
   const mcpTools: MCPTool[] = []
@@ -253,7 +264,7 @@ export async function fetchChatCompletion({
     enableReasoning: capabilities.enableReasoning,
     isPromptToolUse: usePromptToolUse,
     isSupportedToolUse: isSupportedToolUse(assistant),
-    isImageGenerationEndpoint: isDedicatedImageGenerationModel(assistant.model || getDefaultModel()),
+    isImageGenerationEndpoint: isDedicatedImageGenerationModel(model),
     webSearchPluginConfig: webSearchPluginConfig,
     enableWebSearch: capabilities.enableWebSearch,
     enableGenerateImage: capabilities.enableGenerateImage,
@@ -284,21 +295,11 @@ export async function fetchMessagesSummary({ messages, assistant }: { messages: 
 
   // 总结上下文总是取最后5条消息
   const contextMessages = takeRight(messages, 5)
-  const provider = getProviderByModel(model)
 
-  if (!hasApiKey(provider)) {
+  const AI = createAiProviderForQuickTask(model)
+  if (!AI) {
     return null
   }
-
-  // Apply API key rotation
-  // NOTE: Shallow copy is intentional. Provider objects are not mutated by downstream code.
-  // Nested properties (if any) are never modified after creation.
-  const providerWithRotatedKey = {
-    ...provider,
-    apiKey: getRotatedApiKey(provider)
-  }
-
-  const AI = new AiProviderNew(model, providerWithRotatedKey)
 
   const topicId = messages?.find((message) => message.topicId)?.topicId || ''
 
@@ -391,21 +392,10 @@ export async function fetchNoteSummary({ content, assistant }: { content: string
     prompt = await replacePromptVariables(prompt, model.name)
   }
 
-  const provider = getProviderByModel(model)
-
-  if (!hasApiKey(provider)) {
+  const AI = createAiProviderForQuickTask(model)
+  if (!AI) {
     return null
   }
-
-  // Apply API key rotation
-  // NOTE: Shallow copy is intentional. Provider objects are not mutated by downstream code.
-  // Nested properties (if any) are never modified after creation.
-  const providerWithRotatedKey = {
-    ...provider,
-    apiKey: getRotatedApiKey(provider)
-  }
-
-  const AI = new AiProviderNew(model, providerWithRotatedKey)
 
   // only 2000 char and no images
   const truncatedContent = content.substring(0, 2000)
@@ -487,21 +477,10 @@ export async function fetchGenerate({
   if (!model) {
     model = getDefaultModel()
   }
-  const provider = getProviderByModel(model)
-
-  if (!hasApiKey(provider)) {
+  const AI = createAiProviderForQuickTask(model)
+  if (!AI) {
     return ''
   }
-
-  // Apply API key rotation
-  // NOTE: Shallow copy is intentional. Provider objects are not mutated by downstream code.
-  // Nested properties (if any) are never modified after creation.
-  const providerWithRotatedKey = {
-    ...provider,
-    apiKey: getRotatedApiKey(provider)
-  }
-
-  const AI = new AiProviderNew(model, providerWithRotatedKey)
 
   const assistant = getDefaultAssistant()
   assistant.model = model
@@ -542,6 +521,30 @@ export async function fetchGenerate({
   } catch (error: any) {
     return ''
   }
+}
+
+/**
+ * 统一的 AI Provider 创建函数，用于快速任务（摘要、生成等）。
+ * 企业模式使用 accessToken，个人模式使用 apiKey + 轮转。
+ */
+function createAiProviderForQuickTask(model: Model): AiProviderNew | null {
+  if (chatRouterService.isEnterpriseChat()) {
+    const enterpriseProvider = buildEnterpriseProvider(model)
+    return new AiProviderNew(model, enterpriseProvider)
+  }
+
+  const provider = getProviderByModel(model)
+
+  if (!hasApiKey(provider)) {
+    return null
+  }
+
+  // NOTE: Shallow copy is intentional. Provider objects are not mutated by downstream code.
+  const providerWithRotatedKey = {
+    ...provider,
+    apiKey: getRotatedApiKey(provider)
+  }
+  return new AiProviderNew(model, providerWithRotatedKey)
 }
 
 export function hasApiKey(provider: Provider) {

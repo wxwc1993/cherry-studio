@@ -1,13 +1,17 @@
+import { loggerService } from '@logger'
 import { useEnterpriseConfig } from '@renderer/hooks/useEnterpriseConfig'
 import { enterpriseApi } from '@renderer/services/EnterpriseApi'
 import { type EnterpriseUser, useEnterpriseStore } from '@renderer/store/enterprise'
 import { Button, Input, Segmented, Spin } from 'antd'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 type LoginMode = 'feishu' | 'dev'
+
+const POLL_INTERVAL_MS = 2000
+const POLL_MAX_ATTEMPTS = 60
 
 export default function EnterpriseLoginPage() {
   const { t } = useTranslation()
@@ -23,46 +27,67 @@ export default function EnterpriseLoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
+  // 用于取消轮询的 ref
+  const pollingRef = useRef(false)
+
+  // 组件卸载时取消轮询，防止内存泄漏和状态更新
   useEffect(() => {
-    // Check for Feishu callback code
-    const urlParams = new URLSearchParams(window.location.search)
-    const code = urlParams.get('code')
-
-    if (code && config?.serverUrl) {
-      handleFeishuCallback(code)
+    return () => {
+      pollingRef.current = false
     }
-  }, [config])
+  }, [])
 
-  const handleFeishuCallback = useCallback(
-    async (code: string) => {
-      if (!config?.serverUrl) {
-        setError(t('settings.enterprise.login.error.noServerConfig'))
-        return
-      }
-
+  const startPolling = useCallback(
+    async (sessionId: string) => {
       setLoading(true)
       setError(null)
+      pollingRef.current = true
 
-      // Save server address before login
-      setEnterpriseMode(true, config.serverUrl)
-
-      try {
-        const response = await enterpriseApi.feishuLogin(code)
-        const { user, accessToken, refreshToken } = response.data as {
-          user: EnterpriseUser
-          accessToken: string
-          refreshToken: string
+      for (let i = 0; i < POLL_MAX_ATTEMPTS; i++) {
+        if (!pollingRef.current) {
+          setLoading(false)
+          return
         }
-        setAuth(user, accessToken, refreshToken)
-        navigate('/')
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : t('settings.enterprise.login.error.failed')
-        setError(message)
-      } finally {
-        setLoading(false)
+
+        try {
+          const response = await enterpriseApi.feishuPoll(sessionId)
+          const data = response.data as {
+            status: string
+            user?: EnterpriseUser
+            accessToken?: string
+            refreshToken?: string
+            error?: string
+          }
+
+          if (data.status === 'success' && data.user && data.accessToken && data.refreshToken) {
+            pollingRef.current = false
+            setAuth(data.user, data.accessToken, data.refreshToken)
+            navigate('/')
+            return
+          }
+
+          if (data.status === 'error') {
+            pollingRef.current = false
+            setError(data.error || t('settings.enterprise.login.error.failed'))
+            setLoading(false)
+            return
+          }
+
+          // status === 'pending'，继续等待
+        } catch (err) {
+          // 网络错误，记录后继续重试
+          loggerService.withContext('EnterpriseLogin').warn('Feishu poll network error, retrying', { attempt: i, err })
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
       }
+
+      // 超时
+      pollingRef.current = false
+      setError(t('settings.enterprise.login.error.timeout'))
+      setLoading(false)
     },
-    [config, navigate, setAuth, setEnterpriseMode, t]
+    [setAuth, navigate, t]
   )
 
   const handleFeishuLogin = useCallback(() => {
@@ -71,18 +96,30 @@ export default function EnterpriseLoginPage() {
       return
     }
 
-    // Save server address
     setEnterpriseMode(true, config.serverUrl)
 
-    // Redirect to Feishu authorization page
     const feishuAppId = config.feishuAppId
     if (!feishuAppId) {
       setError(t('settings.enterprise.login.error.noServerConfig'))
       return
     }
-    const redirectUri = encodeURIComponent(window.location.origin + '/login/enterprise')
-    window.location.href = `https://open.feishu.cn/open-apis/authen/v1/authorize?app_id=${feishuAppId}&redirect_uri=${redirectUri}&response_type=code`
-  }, [config, setEnterpriseMode, t])
+
+    // 生成随机 sessionId 用于关联轮询
+    const sessionId = crypto.randomUUID()
+
+    // 使用企业服务器地址作为 redirect_uri
+    const redirectUri = encodeURIComponent(`${config.serverUrl}/api/v1/auth/feishu/callback`)
+
+    // 用新窗口打开飞书授权页
+    window.open(
+      `https://open.feishu.cn/open-apis/authen/v1/authorize?app_id=${feishuAppId}&redirect_uri=${redirectUri}&state=${sessionId}&response_type=code`,
+      'feishu-oauth',
+      'width=720,height=720'
+    )
+
+    // 开始轮询登录结果
+    startPolling(sessionId)
+  }, [config, setEnterpriseMode, startPolling, t])
 
   const handleDevLogin = useCallback(async () => {
     if (!config?.serverUrl) {

@@ -22,6 +22,7 @@ export interface ChatOptions {
   maxTokens?: number
   topP?: number
   stream?: boolean
+  assistantPresetId?: string
   [key: string]: unknown
 }
 

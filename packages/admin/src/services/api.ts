@@ -115,13 +115,24 @@ export const rolesApi = {
 }
 
 export const modelsApi = {
-  list: (params?: any) => api.get('/models', { params }),
+  list: (params?: any) => api.get('/models', { params: { ...params, includeAll: true } }),
   get: (id: string) => api.get(`/models/${id}`),
   create: (data: any) => api.post('/models', data),
   update: (id: string, data: any) => api.patch(`/models/${id}`, data),
   delete: (id: string) => api.delete(`/models/${id}`),
   getUsage: (id: string) => api.get(`/models/${id}/usage`),
-  updatePermissions: (id: string, data: any) => api.patch(`/models/${id}/permissions`, data)
+  updatePermissions: (id: string, data: any) => api.patch(`/models/${id}/permissions`, data),
+  setPricing: (id: string, data: any) => api.put(`/models/${id}/pricing`, data),
+  getPricingHistory: (id: string) => api.get(`/models/${id}/pricing/history`),
+  fetchRemoteModels: (data: { providerId: string; apiKey: string; apiEndpoint?: string }) =>
+    api.post('/models/fetch-remote', data),
+  batchCreate: (data: {
+    providerId: string
+    apiKey: string
+    apiEndpoint?: string
+    config?: { providerDisplayName?: string }
+    models: Array<{ name: string; displayName: string; capabilities?: string[] }>
+  }) => api.post('/models/batch', data)
 }
 
 export const knowledgeBasesApi = {
@@ -144,7 +155,25 @@ export const statisticsApi = {
   usage: (params: any) => api.get('/statistics/usage', { params }),
   byModel: (params: any) => api.get('/statistics/models', { params }),
   byUser: (params: any) => api.get('/statistics/users', { params }),
+  byDepartment: (params: any) => api.get('/statistics/departments', { params }),
+  byAssistantPreset: (params: any) => api.get('/statistics/assistant-presets', { params }),
   export: (params: any) => api.get('/statistics/export', { params, responseType: 'blob' })
+}
+
+export const assistantPresetsApi = {
+  // 标签
+  listTags: (params?: any) => api.get('/assistant-presets/tags', { params }),
+  createTag: (data: any) => api.post('/assistant-presets/tags', data),
+  updateTag: (id: string, data: any) => api.patch(`/assistant-presets/tags/${id}`, data),
+  deleteTag: (id: string) => api.delete(`/assistant-presets/tags/${id}`),
+  // 预设
+  list: (params?: any) => api.get('/assistant-presets', { params }),
+  get: (id: string) => api.get(`/assistant-presets/${id}`),
+  create: (data: any) => api.post('/assistant-presets', data),
+  update: (id: string, data: any) => api.patch(`/assistant-presets/${id}`, data),
+  delete: (id: string) => api.delete(`/assistant-presets/${id}`),
+  seed: () => api.post('/assistant-presets/seed'),
+  generatePrompt: (data: { content: string }) => api.post('/assistant-presets/generate-prompt', data)
 }
 
 export const adminApi = {

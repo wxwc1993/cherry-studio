@@ -1876,7 +1876,8 @@
     "assistant": {
       "added": {
         "content": "Assistent erfolgreich hinzugefügt"
-      }
+      },
+      "already_added": "[to be translated]:This assistant preset has already been added"
     },
     "attachments": {
       "pasted_image": "Bild aus Zwischenablage",
@@ -4188,6 +4189,7 @@
           "noServerConfig": "[to be translated]:Enterprise server not configured, please contact your administrator",
           "passwordRequired": "[to be translated]:Please enter password",
           "serverRequired": "[to be translated]:Please enter the enterprise server URL",
+          "timeout": "[to be translated]:Login timed out, please try again",
           "usernameRequired": "[to be translated]:Please enter username"
         },
         "feishuLogin": "[to be translated]:Feishu Login",
@@ -4709,6 +4711,7 @@
       "default_assistant_model": "Standard-Assistent-Modell",
       "default_assistant_model_description": "Modell für neue Assistenten. Wird verwendet, wenn Assistent kein Modell hat.",
       "empty": "Kein Modell",
+      "enterprise_managed": "[to be translated]:Managed by enterprise admin",
       "manage": {
         "add_listed": {
           "confirm": "Alle Modelle zur Liste hinzufügen?",
@@ -4991,6 +4994,9 @@
       },
       "docs_check": "Anzeigen",
       "docs_more_details": "Weitere Details anzeigen",
+      "enterprise": {
+        "no_models": "[to be translated]:No models configured by administrator"
+      },
       "enterprise_managed": "[to be translated]:This provider is managed by your enterprise administrator",
       "enterprise_managed_tooltip": "[to be translated]:In enterprise mode, provider settings are centrally managed",
       "get_api_key": "Hier klicken um Schlüssel zu erhalten",
