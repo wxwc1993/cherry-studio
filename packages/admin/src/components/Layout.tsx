@@ -7,6 +7,7 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ReadOutlined,
   RobotOutlined,
   SafetyCertificateOutlined,
   SettingOutlined,
@@ -73,6 +74,14 @@ export default function Layout() {
         key: '/assistant-presets',
         icon: <RobotOutlined />,
         label: '提示词助手'
+      })
+    }
+
+    if (hasPermission('learningCenter', 'read')) {
+      items.push({
+        key: '/learning-center',
+        icon: <ReadOutlined />,
+        label: '学习中心'
       })
     }
 

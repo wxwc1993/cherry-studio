@@ -6,6 +6,7 @@ import Backups from './pages/Backups'
 import Dashboard from './pages/Dashboard'
 import Departments from './pages/Departments'
 import KnowledgeBases from './pages/KnowledgeBases'
+import LearningCenter from './pages/LearningCenter'
 import Login from './pages/Login'
 import Models from './pages/Models'
 import Roles from './pages/Roles'
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="knowledge-bases" element={<KnowledgeBases />} />
           <Route path="statistics" element={<Statistics />} />
           <Route path="assistant-presets" element={<AssistantPresets />} />
+          <Route path="learning-center" element={<LearningCenter />} />
           <Route path="backups" element={<Backups />} />
           <Route path="settings" element={<Settings />} />
         </Route>

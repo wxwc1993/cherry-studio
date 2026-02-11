@@ -58,6 +58,24 @@ const permissionCategories = [
       { value: 'restore', label: '恢复' },
       { value: 'settings', label: '设置' }
     ]
+  },
+  {
+    key: 'assistantPresets',
+    label: '助手预设',
+    options: [
+      { value: 'read', label: '查看' },
+      { value: 'write', label: '编辑' },
+      { value: 'admin', label: '管理' }
+    ]
+  },
+  {
+    key: 'learningCenter',
+    label: '学习中心',
+    options: [
+      { value: 'read', label: '查看' },
+      { value: 'write', label: '编辑' },
+      { value: 'admin', label: '管理' }
+    ]
   }
 ]
 
