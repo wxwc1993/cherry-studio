@@ -6,6 +6,9 @@ export * from './assistant-presets'
 // 导出远程模型获取 Schema
 export * from './fetch-models'
 
+// 导出学习中心 Schema
+export * from './learning-center'
+
 // ============ 基础 Schema ============
 
 export const paginationParamsSchema = z.object({
