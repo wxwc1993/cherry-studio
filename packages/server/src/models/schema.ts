@@ -404,7 +404,13 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   roles: many(roles),
   users: many(users),
   models: many(models),
-  knowledgeBases: many(knowledgeBases)
+  knowledgeBases: many(knowledgeBases),
+  lcBanners: many(lcBanners),
+  lcCourseCategories: many(lcCourseCategories),
+  lcCourses: many(lcCourses),
+  lcDocumentCategories: many(lcDocumentCategories),
+  lcDocuments: many(lcDocuments),
+  lcHotItems: many(lcHotItems)
 }))
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
@@ -678,5 +684,209 @@ export const assistantPresetTagRelationsRelations = relations(assistantPresetTag
   tag: one(assistantPresetTags, {
     fields: [assistantPresetTagRelations_table.tagId],
     references: [assistantPresetTags.id]
+  })
+}))
+
+// ============ 学习中心 — Banner 表 ============
+
+export const lcBanners = pgTable(
+  'lc_banners',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    title: varchar('title', { length: 200 }).notNull(),
+    imageUrl: text('image_url').notNull(),
+    linkUrl: text('link_url'),
+    linkType: varchar('link_type', { length: 20 }).default('external'),
+    order: integer('order').notNull().default(0),
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('lc_banners_company_id_idx').on(table.companyId),
+    index('lc_banners_company_enabled_order_idx').on(table.companyId, table.isEnabled, table.order)
+  ]
+)
+
+// ============ 学习中心 — 课程分类表 ============
+
+export const lcCourseCategories = pgTable(
+  'lc_course_categories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
+    order: integer('order').notNull().default(0),
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('lc_course_categories_company_id_idx').on(table.companyId),
+    index('lc_course_categories_company_enabled_order_idx').on(table.companyId, table.isEnabled, table.order)
+  ]
+)
+
+// ============ 学习中心 — 课程表 ============
+
+export const lcCourses = pgTable(
+  'lc_courses',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').references(() => lcCourseCategories.id, { onDelete: 'set null' }),
+    title: varchar('title', { length: 300 }).notNull(),
+    description: text('description'),
+    coverUrl: text('cover_url'),
+    videoUrl: text('video_url').notNull(),
+    duration: integer('duration').notNull().default(0),
+    author: varchar('author', { length: 100 }),
+    order: integer('order').notNull().default(0),
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    isRecommended: boolean('is_recommended').notNull().default(false),
+    viewCount: integer('view_count').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('lc_courses_company_id_idx').on(table.companyId),
+    index('lc_courses_category_id_idx').on(table.categoryId),
+    index('lc_courses_company_enabled_order_idx').on(table.companyId, table.isEnabled, table.order)
+  ]
+)
+
+// ============ 学习中心 — 文档分类表 ============
+
+export const lcDocumentCategories = pgTable(
+  'lc_document_categories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
+    order: integer('order').notNull().default(0),
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('lc_document_categories_company_id_idx').on(table.companyId),
+    index('lc_document_categories_company_enabled_order_idx').on(table.companyId, table.isEnabled, table.order)
+  ]
+)
+
+// ============ 学习中心 — 文档表 ============
+
+export const lcDocuments = pgTable(
+  'lc_documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').references(() => lcDocumentCategories.id, { onDelete: 'set null' }),
+    title: varchar('title', { length: 300 }).notNull(),
+    description: text('description'),
+    coverUrl: text('cover_url'),
+    linkUrl: text('link_url').notNull(),
+    linkType: varchar('link_type', { length: 20 }).notNull().default('external'),
+    author: varchar('author', { length: 100 }),
+    order: integer('order').notNull().default(0),
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    isRecommended: boolean('is_recommended').notNull().default(false),
+    viewCount: integer('view_count').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('lc_documents_company_id_idx').on(table.companyId),
+    index('lc_documents_category_id_idx').on(table.categoryId),
+    index('lc_documents_company_enabled_order_idx').on(table.companyId, table.isEnabled, table.order)
+  ]
+)
+
+// ============ 学习中心 — 热搜要闻表 ============
+
+export const lcHotItems = pgTable(
+  'lc_hot_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    title: varchar('title', { length: 300 }).notNull(),
+    linkUrl: text('link_url').notNull(),
+    tag: varchar('tag', { length: 10 }),
+    heatValue: integer('heat_value').notNull().default(0),
+    order: integer('order').notNull().default(0),
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('lc_hot_items_company_id_idx').on(table.companyId),
+    index('lc_hot_items_company_enabled_order_idx').on(table.companyId, table.isEnabled, table.order)
+  ]
+)
+
+// ============ 学习中心 — Relations ============
+
+export const lcBannersRelations = relations(lcBanners, ({ one }) => ({
+  company: one(companies, {
+    fields: [lcBanners.companyId],
+    references: [companies.id]
+  })
+}))
+
+export const lcCourseCategoriesRelations = relations(lcCourseCategories, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [lcCourseCategories.companyId],
+    references: [companies.id]
+  }),
+  courses: many(lcCourses)
+}))
+
+export const lcCoursesRelations = relations(lcCourses, ({ one }) => ({
+  company: one(companies, {
+    fields: [lcCourses.companyId],
+    references: [companies.id]
+  }),
+  category: one(lcCourseCategories, {
+    fields: [lcCourses.categoryId],
+    references: [lcCourseCategories.id]
+  })
+}))
+
+export const lcDocumentCategoriesRelations = relations(lcDocumentCategories, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [lcDocumentCategories.companyId],
+    references: [companies.id]
+  }),
+  documents: many(lcDocuments)
+}))
+
+export const lcDocumentsRelations = relations(lcDocuments, ({ one }) => ({
+  company: one(companies, {
+    fields: [lcDocuments.companyId],
+    references: [companies.id]
+  }),
+  category: one(lcDocumentCategories, {
+    fields: [lcDocuments.categoryId],
+    references: [lcDocumentCategories.id]
+  })
+}))
+
+export const lcHotItemsRelations = relations(lcHotItems, ({ one }) => ({
+  company: one(companies, {
+    fields: [lcHotItems.companyId],
+    references: [companies.id]
   })
 }))
