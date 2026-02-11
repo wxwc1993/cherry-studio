@@ -91,6 +91,7 @@ export interface RolePermissions {
   statistics: StatisticsPermission[]
   system: SystemPermission[]
   assistantPresets: AssistantPresetPermission[]
+  learningCenter?: LearningCenterPermission[]
 }
 
 export type ModelPermission = 'read' | 'use'
@@ -99,6 +100,7 @@ export type UserPermission = 'read' | 'write' | 'admin'
 export type StatisticsPermission = 'read' | 'export'
 export type SystemPermission = 'backup' | 'restore' | 'settings'
 export type AssistantPresetPermission = 'read' | 'write' | 'admin'
+export type LearningCenterPermission = 'read' | 'write' | 'admin'
 
 // ============ 模型管理 ============
 
@@ -379,3 +381,6 @@ export interface AssistantPresetClientData {
   tags: AssistantPresetTag[]
   presets: AssistantPresetItem[]
 }
+
+// ============ 学习中心 ============
+export * from './learning-center'
