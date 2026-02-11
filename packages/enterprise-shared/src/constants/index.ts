@@ -93,6 +93,28 @@ export const API_ROUTES = {
     SEED: '/assistant-presets/seed',
     CLIENT: '/assistant-presets/client',
     GENERATE_PROMPT: '/assistant-presets/generate-prompt'
+  },
+
+  // 学习中心
+  LEARNING_CENTER: {
+    BASE: '/learning-center',
+    CLIENT: '/learning-center/client',
+    CLIENT_HOT_ITEMS: '/learning-center/client/hot-items',
+    BANNERS: '/learning-center/banners',
+    BANNER_BY_ID: (id: string) => `/learning-center/banners/${id}`,
+    BANNER_UPLOAD: '/learning-center/banners/upload',
+    COURSE_CATEGORIES: '/learning-center/course-categories',
+    COURSE_CATEGORY_BY_ID: (id: string) => `/learning-center/course-categories/${id}`,
+    COURSES: '/learning-center/courses',
+    COURSE_BY_ID: (id: string) => `/learning-center/courses/${id}`,
+    COURSE_VIEW: (id: string) => `/learning-center/courses/${id}/view`,
+    DOCUMENT_CATEGORIES: '/learning-center/document-categories',
+    DOCUMENT_CATEGORY_BY_ID: (id: string) => `/learning-center/document-categories/${id}`,
+    DOCUMENTS: '/learning-center/documents',
+    DOCUMENT_BY_ID: (id: string) => `/learning-center/documents/${id}`,
+    DOCUMENT_VIEW: (id: string) => `/learning-center/documents/${id}/view`,
+    HOT_ITEMS: '/learning-center/hot-items',
+    HOT_ITEM_BY_ID: (id: string) => `/learning-center/hot-items/${id}`
   }
 } as const
 
@@ -185,6 +207,13 @@ export const FILE_LIMITS = {
   ]
 } as const
 
+// Banner 图片上传限制（独立于知识库 FILE_LIMITS）
+export const BANNER_IMAGE_LIMITS = {
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+  ALLOWED_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+} as const
+
 // 系统角色
 export const SYSTEM_ROLES = {
   SUPER_ADMIN: 'super_admin',
@@ -201,7 +230,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     users: ['read', 'write', 'admin'],
     statistics: ['read', 'export'],
     system: ['backup', 'restore', 'settings'],
-    assistantPresets: ['read', 'write', 'admin']
+    assistantPresets: ['read', 'write', 'admin'],
+    learningCenter: ['read', 'write', 'admin']
   },
   [SYSTEM_ROLES.ADMIN]: {
     models: ['read', 'use'],
@@ -209,7 +239,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     users: ['read', 'write'],
     statistics: ['read', 'export'],
     system: ['backup'],
-    assistantPresets: ['read', 'write', 'admin']
+    assistantPresets: ['read', 'write', 'admin'],
+    learningCenter: ['read', 'write', 'admin']
   },
   [SYSTEM_ROLES.MANAGER]: {
     models: ['read', 'use'],
@@ -217,7 +248,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     users: ['read'],
     statistics: ['read'],
     system: [],
-    assistantPresets: ['read']
+    assistantPresets: ['read'],
+    learningCenter: ['read']
   },
   [SYSTEM_ROLES.USER]: {
     models: ['read', 'use'],
@@ -225,7 +257,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     users: [],
     statistics: [],
     system: [],
-    assistantPresets: ['read']
+    assistantPresets: ['read'],
+    learningCenter: ['read']
   }
 } as const
 

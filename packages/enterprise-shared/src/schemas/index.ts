@@ -75,7 +75,8 @@ export const rolePermissionsSchema = z.object({
   users: z.array(z.enum(['read', 'write', 'admin'])).default([]),
   statistics: z.array(z.enum(['read', 'export'])).default([]),
   system: z.array(z.enum(['backup', 'restore', 'settings'])).default([]),
-  assistantPresets: z.array(z.enum(['read', 'write', 'admin'])).default([])
+  assistantPresets: z.array(z.enum(['read', 'write', 'admin'])).default([]),
+  learningCenter: z.array(z.enum(['read', 'write', 'admin'])).default([])
 })
 
 export const createRoleSchema = z.object({
