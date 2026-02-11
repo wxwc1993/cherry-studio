@@ -1741,6 +1741,9 @@
     "apps": "Apps",
     "minapps": "Minapps"
   },
+  "learningCenter": {
+    "title": "Learning Center"
+  },
   "lmstudio": {
     "keep_alive_time": {
       "description": "The time in minutes to keep the connection alive, default is 5 minutes.",

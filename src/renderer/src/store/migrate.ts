@@ -3204,6 +3204,20 @@ const migrateConfig = {
       logger.error('migrate 195 error', error as Error)
       return state
     }
+  },
+  '196': (state: RootState) => {
+    try {
+      if (state.settings && state.settings.sidebarIcons) {
+        if (!state.settings.sidebarIcons.visible.includes('learning_center' as any)) {
+          state.settings.sidebarIcons.visible = [...state.settings.sidebarIcons.visible, 'learning_center' as any]
+        }
+      }
+      logger.info('migrate 196 success')
+      return state
+    } catch (error) {
+      logger.error('migrate 196 error', error as Error)
+      return state
+    }
   }
 }
 

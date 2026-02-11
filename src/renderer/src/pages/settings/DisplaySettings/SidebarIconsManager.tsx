@@ -11,6 +11,7 @@ import {
   Code,
   FileSearch,
   Folder,
+  GraduationCap,
   Languages,
   LayoutGrid,
   MessageSquareQuote,
@@ -125,7 +126,8 @@ const SidebarIconsManager: FC<SidebarIconsManagerProps> = ({
         files: <Folder size={16} />,
         notes: <NotepadText size={16} />,
         code_tools: <Code size={16} />,
-        openclaw: <Bot size={16} />
+        openclaw: <Bot size={16} />,
+        learning_center: <GraduationCap size={16} />
       }) satisfies Record<SidebarIcon, ReactNode>,
     []
   )

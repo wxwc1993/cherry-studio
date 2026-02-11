@@ -18,6 +18,7 @@ import {
   Code,
   FileSearch,
   Folder,
+  GraduationCap,
   Languages,
   LayoutGrid,
   MessageSquare,
@@ -142,7 +143,8 @@ const MainMenus: FC = () => {
     files: <Folder size={18} className="icon" />,
     notes: <NotepadText size={18} className="icon" />,
     code_tools: <Code size={18} className="icon" />,
-    openclaw: <OpenClawIcon style={{ width: 18, height: 18 }} className="icon" />
+    openclaw: <OpenClawIcon style={{ width: 18, height: 18 }} className="icon" />,
+    learning_center: <GraduationCap size={18} className="icon" />
   }
 
   const pathMap = {
@@ -155,7 +157,8 @@ const MainMenus: FC = () => {
     files: '/files',
     code_tools: '/code',
     notes: '/notes',
-    openclaw: '/openclaw'
+    openclaw: '/openclaw',
+    learning_center: '/learning'
   }
 
   return filteredIcons.map((icon) => {
