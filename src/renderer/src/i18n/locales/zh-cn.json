@@ -1742,6 +1742,33 @@
     "minapps": "小程序"
   },
   "learningCenter": {
+    "empty": {
+      "courses": "暂无课程",
+      "documents": "暂无文档",
+      "hotSearch": "暂无热搜",
+      "title": "暂无学习内容"
+    },
+    "hotSearch": {
+      "noMore": "没有更多了",
+      "refresh": "换一批",
+      "tagHot": "热",
+      "tagNew": "新",
+      "title": "大家都在搜"
+    },
+    "promotion": {
+      "subtitle": "掌握高效使用秘诀",
+      "title": "从入门到精通",
+      "viewMore": "查看更多"
+    },
+    "stats": {
+      "courses": "门视频课",
+      "documents": "篇知识文档",
+      "views": "次学习访问"
+    },
+    "tabs": {
+      "courses": "精选视频课",
+      "documents": "精选知识文档"
+    },
     "title": "学习中心"
   },
   "lmstudio": {
@@ -2903,6 +2930,217 @@
     "uninstall": "卸载",
     "uninstall_package": "卸载插件包",
     "uninstalling": "卸载中..."
+  },
+  "presentations": {
+    "create": {
+      "content_hint": "根据所选类型提供内容",
+      "content_label": "内容",
+      "next": "下一步",
+      "prev": "上一步",
+      "step": {
+        "basic": "基本信息",
+        "settings": "设置",
+        "template": "模板"
+      },
+      "submit": "创建",
+      "template_hint": "为演示文稿选择模板",
+      "template_label": "模板",
+      "title": "创建演示文稿",
+      "title_label": "标题",
+      "title_placeholder": "输入演示文稿标题",
+      "type": {
+        "description": "从描述创建",
+        "description_desc": "提供完整的页面描述来生成幻灯片",
+        "description_placeholder": "输入每张幻灯片的详细描述...",
+        "idea": "从想法创建",
+        "idea_desc": "描述您的想法，AI将生成完整的演示文稿",
+        "idea_placeholder": "输入您的演示文稿想法...",
+        "outline": "从大纲创建",
+        "outline_desc": "提供结构化大纲来生成幻灯片",
+        "outline_placeholder": "输入您的演示文稿大纲..."
+      },
+      "type_label": "创建方式"
+    },
+    "description": {
+      "ai_refine": "AI优化",
+      "completed": "已完成",
+      "generate_all": "生成所有描述",
+      "has_description": "已有描述",
+      "has_prompt": "已有图像提示词",
+      "image_prompt_label": "图像提示词",
+      "image_prompt_placeholder": "描述要为该幻灯片生成的图像...",
+      "layout": {
+        "comparison": "对比",
+        "image_full": "全图",
+        "title_content": "标题+内容",
+        "title_image": "标题+图片",
+        "title_only": "仅标题",
+        "two_column": "双栏"
+      },
+      "layout_label": "布局",
+      "layout_placeholder": "选择布局",
+      "no_pages": "暂无页面，请先生成大纲",
+      "refine_hint": "描述您希望如何改进描述内容",
+      "refine_modal_title": "优化描述",
+      "refine_placeholder": "例如：使其更加简洁专业...",
+      "refine_tooltip": "使用AI优化描述内容",
+      "text_label": "内容文本",
+      "text_placeholder": "输入该幻灯片的文本内容...",
+      "title": "描述"
+    },
+    "editor": {
+      "action_descriptions": "生成描述",
+      "action_images": "生成图片",
+      "action_outline": "生成大纲",
+      "edit_image": "编辑图片",
+      "edit_image_hint": "描述您想对图片进行的修改",
+      "edit_image_modal_title": "编辑图片",
+      "edit_image_placeholder": "例如：将背景改为蓝色...",
+      "generate_image": "生成图片",
+      "loading": "加载演示文稿...",
+      "no_image": "尚未生成图片",
+      "not_found": "未找到演示文稿",
+      "page_label": "页面",
+      "regenerate_image": "重新生成图片",
+      "select_page": "选择要编辑的页面",
+      "tab_description": "描述",
+      "tab_image": "图片",
+      "tab_materials": "素材",
+      "tab_outline": "大纲"
+    },
+    "export": {
+      "download": "下载",
+      "format": {
+        "editable_pptx": "可编辑PPTX",
+        "editable_pptx_desc": "导出为可编辑的PowerPoint，包含文本图层（OCR+图像修复）",
+        "pdf": "PDF",
+        "pdf_desc": "导出为PDF文档，便于分享和打印",
+        "pptx": "PPTX",
+        "pptx_desc": "导出为包含图片的PowerPoint演示文稿"
+      },
+      "processing": "正在处理导出...",
+      "start": "开始导出",
+      "title": "导出"
+    },
+    "list": {
+      "create": "新建演示文稿",
+      "create_first": "创建您的第一个演示文稿",
+      "delete_confirm": "确定要删除此演示文稿吗？",
+      "empty": "暂无演示文稿",
+      "search_placeholder": "搜索演示文稿...",
+      "status": {
+        "completed": "已完成",
+        "descriptions_ready": "描述就绪",
+        "draft": "草稿",
+        "images_ready": "图片就绪",
+        "outline_ready": "大纲就绪"
+      },
+      "status_all": "全部",
+      "status_filter": "按状态筛选"
+    },
+    "material": {
+      "delete_confirm": "确定要删除此素材吗？",
+      "empty": "暂无上传的素材",
+      "tab": "素材",
+      "upload": "上传素材"
+    },
+    "outline": {
+      "add_bullet": "添加要点",
+      "add_page": "添加页面",
+      "ai_refine": "AI优化",
+      "bullet_placeholder": "输入要点...",
+      "bullets": "要点列表",
+      "delete_confirm": "确定要删除此页面吗？",
+      "new_page_title": "新页面",
+      "notes": "演讲备注",
+      "notes_placeholder": "输入演讲备注...",
+      "pages": "页面",
+      "refine_hint": "描述您希望如何改进大纲",
+      "refine_modal_title": "优化大纲",
+      "refine_placeholder": "例如：使其更有条理，增加更多细节...",
+      "title": "大纲",
+      "title_placeholder": "输入页面标题..."
+    },
+    "preview": {
+      "has_description": "已有描述",
+      "title": "预览"
+    },
+    "reference": {
+      "delete_confirm": "确定要删除此参考文件吗？",
+      "empty": "暂无上传的参考文件",
+      "status": {
+        "completed": "已解析",
+        "failed": "解析失败",
+        "pending": "等待中",
+        "processing": "解析中"
+      },
+      "tab": "参考文件",
+      "upload": "上传参考文件"
+    },
+    "settings": {
+      "image_model": "图像模型",
+      "image_model_hint": "用于生成幻灯片图片的模型",
+      "image_ratio": "图像比例",
+      "image_style": {
+        "3d": "3D渲染",
+        "flat": "扁平设计",
+        "illustration": "插画风格",
+        "minimalist": "极简风格",
+        "realistic": "写实风格",
+        "watercolor": "水彩风格"
+      },
+      "image_style_label": "图像风格",
+      "image_title": "图像设置",
+      "language": {
+        "en_us": "英语",
+        "ja_jp": "日语",
+        "zh_cn": "简体中文"
+      },
+      "language_label": "语言",
+      "model_placeholder": "选择模型",
+      "model_title": "模型设置",
+      "page_count": "页数",
+      "text_model": "文本模型",
+      "text_model_hint": "用于生成大纲和描述的模型",
+      "theme": {
+        "academic": "学术",
+        "business": "商务",
+        "creative": "创意",
+        "minimal": "简约",
+        "tech": "科技"
+      },
+      "theme_label": "主题",
+      "title": "设置"
+    },
+    "task": {
+      "active_tasks": "进行中的任务",
+      "dismiss": "关闭",
+      "edit_image": "正在编辑图片",
+      "export_editable_pptx": "正在导出可编辑PPTX",
+      "export_pdf": "正在导出PDF",
+      "export_pptx": "正在导出PPTX",
+      "generate_descriptions": "正在生成描述",
+      "generate_images": "正在生成图片",
+      "generate_outline": "正在生成大纲",
+      "generate_single_image": "正在生成图片",
+      "parse_reference_file": "正在解析参考文件",
+      "refine_descriptions": "正在优化描述",
+      "refine_outline": "正在优化大纲",
+      "status": {
+        "cancelled": "已取消",
+        "completed": "已完成",
+        "failed": "失败",
+        "pending": "等待中",
+        "running": "进行中"
+      },
+      "unknown": "未知任务"
+    },
+    "template": {
+      "empty": "暂无可用模板",
+      "loading": "加载模板中...",
+      "no_desc": "暂无描述"
+    },
+    "title": "演示文稿"
   },
   "preview": {
     "copy": {
@@ -5383,6 +5621,7 @@
     "notes": "笔记",
     "openclaw": "OpenClaw",
     "paintings": "绘画",
+    "presentations": "演示文稿",
     "settings": "设置",
     "store": "助手库",
     "translate": "翻译"
