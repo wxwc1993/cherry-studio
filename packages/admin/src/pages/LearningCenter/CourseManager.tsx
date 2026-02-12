@@ -130,15 +130,16 @@ export default function CourseManager() {
     try {
       const response = await learningCenterApi.listCourseCategories()
       setCategories(response.data.data)
-    } catch (error: any) {
-      message.error(error.response?.data?.error?.message || '加载分类失败')
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: { message?: string } } } }
+      message.error(err.response?.data?.error?.message || '加载分类失败')
     }
   }, [])
 
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true)
-      const params: Record<string, any> = { page, pageSize }
+      const params: Record<string, unknown> = { page, pageSize }
       if (activeCategoryId) {
         params.categoryId = activeCategoryId
       }
@@ -148,8 +149,9 @@ export default function CourseManager() {
       const response = await learningCenterApi.listCourses(params)
       setCourses(response.data.data)
       setTotal(response.data.pagination?.total || 0)
-    } catch (error: any) {
-      message.error(error.response?.data?.error?.message || '加载课程失败')
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: { message?: string } } } }
+      message.error(err.response?.data?.error?.message || '加载课程失败')
     } finally {
       setLoading(false)
     }
@@ -203,8 +205,9 @@ export default function CourseManager() {
       await learningCenterApi.deleteCourse(id)
       message.success('删除成功')
       loadCourses()
-    } catch (error: any) {
-      message.error(error.response?.data?.error?.message || '删除失败')
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: { message?: string } } } }
+      message.error(err.response?.data?.error?.message || '删除失败')
     }
   }
 
@@ -220,9 +223,10 @@ export default function CourseManager() {
       }
       setCourseModalOpen(false)
       loadCourses()
-    } catch (error: any) {
-      if (error.response) {
-        message.error(error.response?.data?.error?.message || '操作失败')
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: { message?: string } } } }
+      if (err.response) {
+        message.error(err.response?.data?.error?.message || '操作失败')
       }
     }
   }
@@ -250,8 +254,9 @@ export default function CourseManager() {
         setActiveCategoryId(undefined)
       }
       loadCourses()
-    } catch (error: any) {
-      message.error(error.response?.data?.error?.message || '删除失败')
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: { message?: string } } } }
+      message.error(err.response?.data?.error?.message || '删除失败')
     }
   }
 
@@ -267,9 +272,10 @@ export default function CourseManager() {
       }
       setCategoryModalOpen(false)
       loadCategories()
-    } catch (error: any) {
-      if (error.response) {
-        message.error(error.response?.data?.error?.message || '操作失败')
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: { message?: string } } } }
+      if (err.response) {
+        message.error(err.response?.data?.error?.message || '操作失败')
       }
     }
   }

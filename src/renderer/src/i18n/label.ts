@@ -142,13 +142,15 @@ const titleKeyMap = {
   home: 'title.home',
   knowledge: 'title.knowledge',
   launchpad: 'title.launchpad',
+  login: 'settings.enterprise.login.title',
   'mcp-servers': 'title.mcp-servers',
   memories: 'title.memories',
   notes: 'title.notes',
   paintings: 'title.paintings',
   settings: 'title.settings',
   translate: 'title.translate',
-  openclaw: 'openclaw.title'
+  openclaw: 'openclaw.title',
+  presentations: 'presentations.title'
 } as const
 
 export const getTitleLabel = (key: string): string => {
@@ -188,7 +190,8 @@ const sidebarIconKeyMap = {
   code_tools: 'code.title',
   notes: 'notes.title',
   openclaw: 'openclaw.title',
-  learning_center: 'learningCenter.title'
+  learning_center: 'learningCenter.title',
+  presentations: 'presentations.title'
 } as const
 
 export const getSidebarIconLabel = (key: string): string => {

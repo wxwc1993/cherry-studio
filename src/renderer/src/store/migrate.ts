@@ -65,6 +65,7 @@ import { DEFAULT_TOOL_ORDER, DEFAULT_TOOL_ORDER_BY_SCOPE } from './inputTools'
 import { initialState as llmInitialState, moveProvider } from './llm'
 import { mcpSlice } from './mcp'
 import { initialState as notesInitialState } from './note'
+import { initialState as presentationsInitialState } from './presentations'
 import { defaultActionItems } from './selectionStore'
 import { initialState as settingsInitialState } from './settings'
 import { initialState as shortcutsInitialState } from './shortcuts'
@@ -3216,6 +3217,24 @@ const migrateConfig = {
       return state
     } catch (error) {
       logger.error('migrate 196 error', error as Error)
+      return state
+    }
+  },
+  '197': (state: RootState) => {
+    try {
+      if (state.settings && state.settings.sidebarIcons) {
+        if (!state.settings.sidebarIcons.visible.includes('presentations' as any)) {
+          state.settings.sidebarIcons.visible = [...state.settings.sidebarIcons.visible, 'presentations' as any]
+        }
+      }
+      // 确保 presentations 状态被正确初始化（blacklist 中的 slice 需要显式初始化）
+      if (!state.presentations || !state.presentations.items) {
+        state.presentations = presentationsInitialState
+      }
+      logger.info('migrate 197 success')
+      return state
+    } catch (error) {
+      logger.error('migrate 197 error', error as Error)
       return state
     }
   }

@@ -439,6 +439,81 @@ class EnterpriseApiService {
       }>
     }>('GET', `/assistant-presets/client${params}`)
   }
+
+  // 学习中心
+  async getLearningCenterData() {
+    return this.request<{
+      banners: Array<{
+        id: string
+        title: string
+        imageUrl: string
+        linkUrl?: string
+        linkType?: string
+        order: number
+      }>
+      courseCategories: Array<{
+        id: string
+        name: string
+        order: number
+        courses: Array<{
+          id: string
+          title: string
+          description?: string
+          coverUrl?: string
+          videoUrl: string
+          duration: number
+          author?: string
+          order: number
+          isRecommended: boolean
+          viewCount: number
+        }>
+      }>
+      documentCategories: Array<{
+        id: string
+        name: string
+        order: number
+        documents: Array<{
+          id: string
+          title: string
+          description?: string
+          coverUrl?: string
+          linkUrl: string
+          linkType: string
+          author?: string
+          order: number
+          isRecommended: boolean
+          viewCount: number
+        }>
+      }>
+      hotItems: Array<{
+        id: string
+        title: string
+        linkUrl: string
+        tag?: string
+        heatValue: number
+        order: number
+      }>
+      stats: {
+        totalCourses: number
+        totalDocuments: number
+        totalViews: number
+      }
+    }>('GET', '/learning-center/client')
+  }
+
+  async getHotItemsBatch(excludeIds: string[]) {
+    const exclude = excludeIds.join(',')
+    return this.request<
+      Array<{
+        id: string
+        title: string
+        linkUrl: string
+        tag?: string
+        heatValue: number
+        order: number
+      }>
+    >('GET', `/learning-center/client/hot-items${exclude ? `?exclude=${exclude}` : ''}`)
+  }
 }
 
 export const enterpriseApi = new EnterpriseApiService()

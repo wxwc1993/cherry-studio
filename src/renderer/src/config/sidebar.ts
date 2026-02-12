@@ -15,7 +15,8 @@ export const DEFAULT_SIDEBAR_ICONS: SidebarIcon[] = [
   'code_tools',
   'notes',
   'openclaw',
-  'learning_center'
+  'learning_center',
+  'presentations'
 ]
 
 /**

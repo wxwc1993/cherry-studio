@@ -95,6 +95,36 @@ export const API_ROUTES = {
     GENERATE_PROMPT: '/assistant-presets/generate-prompt'
   },
 
+  // 演示文稿
+  PRESENTATIONS: {
+    BASE: '/presentations',
+    BY_ID: (id: string) => `/presentations/${id}`,
+    GENERATE_OUTLINE: (id: string) => `/presentations/${id}/generate-outline`,
+    REFINE_OUTLINE: (id: string) => `/presentations/${id}/refine-outline`,
+    GENERATE_DESCRIPTIONS: (id: string) => `/presentations/${id}/generate-descriptions`,
+    REFINE_DESCRIPTIONS: (id: string) => `/presentations/${id}/refine-descriptions`,
+    GENERATE_IMAGES: (id: string) => `/presentations/${id}/generate-images`,
+    PAGE_GENERATE_IMAGE: (id: string, pageId: string) => `/presentations/${id}/pages/${pageId}/generate-image`,
+    PAGE_EDIT_IMAGE: (id: string, pageId: string) => `/presentations/${id}/pages/${pageId}/edit-image`,
+    PAGES: (id: string) => `/presentations/${id}/pages`,
+    PAGE_BY_ID: (id: string, pageId: string) => `/presentations/${id}/pages/${pageId}`,
+    PAGES_REORDER: (id: string) => `/presentations/${id}/pages/reorder`,
+    EXPORT_PPTX: (id: string) => `/presentations/${id}/export/pptx`,
+    EXPORT_PDF: (id: string) => `/presentations/${id}/export/pdf`,
+    EXPORT_EDITABLE_PPTX: (id: string) => `/presentations/${id}/export/editable-pptx`,
+    TASK_BY_ID: (taskId: string) => `/presentations/tasks/${taskId}`,
+    TASK_DOWNLOAD: (taskId: string) => `/presentations/tasks/${taskId}/download`,
+    MATERIALS: (id: string) => `/presentations/${id}/materials`,
+    MATERIAL_BY_ID: (id: string) => `/presentations/materials/${id}`,
+    REFERENCE_FILES: (id: string) => `/presentations/${id}/reference-files`,
+    REFERENCE_FILE_BY_ID: (id: string) => `/presentations/reference-files/${id}`,
+    TEMPLATES: '/presentations/templates',
+    TEMPLATE_BY_ID: (id: string) => `/presentations/templates/${id}`,
+    SETTINGS: '/presentations/settings',
+    ADMIN_LIST: '/presentations/admin/list',
+    ADMIN_STATISTICS: '/presentations/admin/statistics'
+  },
+
   // 学习中心
   LEARNING_CENTER: {
     BASE: '/learning-center',
@@ -156,6 +186,21 @@ export const ERROR_CODES = {
   KB_PROCESSING_ERROR: 'KB_7001',
   KB_DOCUMENT_TOO_LARGE: 'KB_7002',
   KB_UNSUPPORTED_FORMAT: 'KB_7003',
+
+  // 演示文稿错误 (8xxx)
+  PRESENTATION_NOT_FOUND: 'PRES_8001',
+  PRESENTATION_PAGE_NOT_FOUND: 'PRES_8002',
+  PRESENTATION_TASK_NOT_FOUND: 'PRES_8003',
+  PRESENTATION_TASK_FAILED: 'PRES_8004',
+  PRESENTATION_EXPORT_FAILED: 'PRES_8005',
+  PRESENTATION_FLASK_UNAVAILABLE: 'PRES_8006',
+  PRESENTATION_FLASK_ERROR: 'PRES_8007',
+  PRESENTATION_TEMPLATE_NOT_FOUND: 'PRES_8008',
+  PRESENTATION_MATERIAL_NOT_FOUND: 'PRES_8009',
+  PRESENTATION_REFERENCE_FILE_NOT_FOUND: 'PRES_8010',
+  PRESENTATION_REFERENCE_FILE_PARSE_FAILED: 'PRES_8011',
+  PRESENTATION_MAX_PAGES_EXCEEDED: 'PRES_8012',
+  PRESENTATION_CONCURRENT_TASK_LIMIT: 'PRES_8013',
 
   // 系统错误 (9xxx)
   INTERNAL_ERROR: 'SYS_9001',
@@ -231,7 +276,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     statistics: ['read', 'export'],
     system: ['backup', 'restore', 'settings'],
     assistantPresets: ['read', 'write', 'admin'],
-    learningCenter: ['read', 'write', 'admin']
+    learningCenter: ['read', 'write', 'admin'],
+    presentations: ['read', 'write', 'export', 'admin']
   },
   [SYSTEM_ROLES.ADMIN]: {
     models: ['read', 'use'],
@@ -240,7 +286,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     statistics: ['read', 'export'],
     system: ['backup'],
     assistantPresets: ['read', 'write', 'admin'],
-    learningCenter: ['read', 'write', 'admin']
+    learningCenter: ['read', 'write', 'admin'],
+    presentations: ['read', 'write', 'export', 'admin']
   },
   [SYSTEM_ROLES.MANAGER]: {
     models: ['read', 'use'],
@@ -249,7 +296,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     statistics: ['read'],
     system: [],
     assistantPresets: ['read'],
-    learningCenter: ['read']
+    learningCenter: ['read'],
+    presentations: ['read', 'write', 'export']
   },
   [SYSTEM_ROLES.USER]: {
     models: ['read', 'use'],
@@ -258,7 +306,8 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     statistics: [],
     system: [],
     assistantPresets: ['read'],
-    learningCenter: ['read']
+    learningCenter: ['read'],
+    presentations: ['read', 'export']
   }
 } as const
 

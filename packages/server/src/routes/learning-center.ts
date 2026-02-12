@@ -1,4 +1,5 @@
 import {
+  type CourseQueryInput,
   courseQuerySchema,
   createBannerSchema,
   createCourseCategorySchema,
@@ -8,9 +9,11 @@ import {
   createHotItemSchema,
   createPagination,
   createSuccessResponse,
+  type DocumentQueryInput,
   documentQuerySchema,
   hotItemsRefreshQuerySchema,
   lcIdParamSchema,
+  type LcPaginationInput,
   lcPaginationSchema,
   updateBannerSchema,
   updateCourseCategorySchema,
@@ -20,6 +23,7 @@ import {
   updateHotItemSchema
 } from '@cherry-studio/enterprise-shared'
 import { and, asc, count, desc, eq, inArray, isNull, not, sql } from 'drizzle-orm'
+import type { Request } from 'express'
 import { Router } from 'express'
 
 import { authenticate, requirePermission } from '../middleware/auth'
@@ -27,6 +31,9 @@ import { apiLimiter, strictLimiter } from '../middleware/rate-limit.middleware'
 import { validate } from '../middleware/validate'
 import { db, lcBanners, lcCourseCategories, lcCourses, lcDocumentCategories, lcDocuments, lcHotItems } from '../models'
 import { createLogger } from '../utils/logger'
+
+// 携带验证后 query 参数的 Request 类型
+type ValidatedQueryRequest<T> = Request<unknown, unknown, unknown, T>
 
 const router = Router()
 const logger = createLogger('LearningCenterRoutes')
@@ -187,10 +194,10 @@ router.get(
   '/banners',
   requirePermission('learningCenter', 'read'),
   validate(lcPaginationSchema, 'query'),
-  async (req, res, next) => {
+  async (req: ValidatedQueryRequest<LcPaginationInput>, res, next) => {
     try {
       const companyId = req.user!.companyId
-      const { page, pageSize } = req.query as any
+      const { page, pageSize } = req.query
 
       const [items, total] = await Promise.all([
         db
@@ -370,10 +377,10 @@ router.get(
   '/courses',
   requirePermission('learningCenter', 'read'),
   validate(courseQuerySchema, 'query'),
-  async (req, res, next) => {
+  async (req: ValidatedQueryRequest<CourseQueryInput>, res, next) => {
     try {
       const companyId = req.user!.companyId
-      const { page, pageSize, categoryId, uncategorized } = req.query as any
+      const { page, pageSize, categoryId, uncategorized } = req.query
       const conditions = [eq(lcCourses.companyId, companyId)]
       if (categoryId) {
         conditions.push(eq(lcCourses.categoryId, categoryId))
@@ -563,10 +570,10 @@ router.get(
   '/documents',
   requirePermission('learningCenter', 'read'),
   validate(documentQuerySchema, 'query'),
-  async (req, res, next) => {
+  async (req: ValidatedQueryRequest<DocumentQueryInput>, res, next) => {
     try {
       const companyId = req.user!.companyId
-      const { page, pageSize, categoryId, uncategorized } = req.query as any
+      const { page, pageSize, categoryId, uncategorized } = req.query
       const conditions = [eq(lcDocuments.companyId, companyId)]
       if (categoryId) {
         conditions.push(eq(lcDocuments.categoryId, categoryId))
@@ -667,10 +674,10 @@ router.get(
   '/hot-items',
   requirePermission('learningCenter', 'read'),
   validate(lcPaginationSchema, 'query'),
-  async (req, res, next) => {
+  async (req: ValidatedQueryRequest<LcPaginationInput>, res, next) => {
     try {
       const companyId = req.user!.companyId
-      const { page, pageSize } = req.query as any
+      const { page, pageSize } = req.query
 
       const [items, total] = await Promise.all([
         db

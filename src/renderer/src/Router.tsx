@@ -16,12 +16,14 @@ import FilesPage from './pages/files/FilesPage'
 import HomePage from './pages/home/HomePage'
 import KnowledgePage from './pages/knowledge/KnowledgePage'
 import LaunchpadPage from './pages/launchpad/LaunchpadPage'
+import LearningCenterPage from './pages/learning/LearningCenterPage'
 import EnterpriseLoginPage from './pages/login/EnterpriseLoginPage'
 import MinAppPage from './pages/minapps/MinAppPage'
 import MinAppsPage from './pages/minapps/MinAppsPage'
 import NotesPage from './pages/notes/NotesPage'
 import OpenClawPage from './pages/openclaw/OpenClawPage'
 import PaintingsRoutePage from './pages/paintings/PaintingsRoutePage'
+import PresentationsRoutePage from './pages/presentations/PresentationsRoutePage'
 import SettingsPage from './pages/settings/SettingsPage'
 import AssistantPresetsPage from './pages/store/assistants/presets/AssistantPresetsPage'
 import TranslatePage from './pages/translate/TranslatePage'
@@ -41,6 +43,7 @@ const Router: FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/store" element={<AssistantPresetsPage />} />
             <Route path="/paintings/*" element={<PaintingsRoutePage />} />
+            <Route path="/presentations/*" element={<PresentationsRoutePage />} />
             <Route path="/translate" element={<TranslatePage />} />
             <Route path="/files" element={<FilesPage />} />
             <Route path="/notes" element={<NotesPage />} />
@@ -64,6 +67,7 @@ const Router: FC = () => {
             />
             <Route path="/code" element={<CodeToolsPage />} />
             <Route path="/openclaw" element={<OpenClawPage />} />
+            <Route path="/learning" element={<LearningCenterPage />} />
             <Route path="/settings/*" element={<SettingsPage />} />
             <Route path="/launchpad" element={<LaunchpadPage />} />
           </Route>

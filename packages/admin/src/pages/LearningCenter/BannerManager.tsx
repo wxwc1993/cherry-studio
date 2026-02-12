@@ -17,6 +17,15 @@ interface Banner {
   createdAt: string
 }
 
+// 从 Axios 错误响应中提取错误消息
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as { response?: { data?: { error?: { message?: string } } } }
+    return axiosError.response?.data?.error?.message || fallback
+  }
+  return fallback
+}
+
 export default function BannerManager() {
   const [loading, setLoading] = useState(false)
   const [banners, setBanners] = useState<Banner[]>([])
@@ -32,8 +41,8 @@ export default function BannerManager() {
       setLoading(true)
       const response = await learningCenterApi.listBanners()
       setBanners(response.data.data)
-    } catch (error: any) {
-      message.error(error.response?.data?.error?.message || '加载 Banner 列表失败')
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, '加载 Banner 列表失败'))
     } finally {
       setLoading(false)
     }
@@ -68,8 +77,8 @@ export default function BannerManager() {
       await learningCenterApi.deleteBanner(id)
       message.success('删除成功')
       loadData()
-    } catch (error: any) {
-      message.error(error.response?.data?.error?.message || '删除失败')
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, '删除失败'))
     }
   }
 
@@ -85,9 +94,9 @@ export default function BannerManager() {
       }
       setModalOpen(false)
       loadData()
-    } catch (error: any) {
-      if (error.response) {
-        message.error(error.response?.data?.error?.message || '操作失败')
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        message.error(getErrorMessage(error, '操作失败'))
       }
     }
   }
@@ -97,8 +106,8 @@ export default function BannerManager() {
       await learningCenterApi.updateBanner(record.id, { isEnabled: !record.isEnabled })
       message.success(record.isEnabled ? '已禁用' : '已启用')
       loadData()
-    } catch (error: any) {
-      message.error(error.response?.data?.error?.message || '操作失败')
+    } catch (error: unknown) {
+      message.error(getErrorMessage(error, '操作失败'))
     }
   }
 

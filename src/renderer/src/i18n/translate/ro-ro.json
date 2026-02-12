@@ -1741,6 +1741,36 @@
     "apps": "Aplicații",
     "minapps": "Mini-aplicații"
   },
+  "learningCenter": {
+    "empty": {
+      "courses": "[to be translated]:No courses available",
+      "documents": "[to be translated]:No documents available",
+      "hotSearch": "[to be translated]:No trending searches",
+      "title": "[to be translated]:No learning content yet"
+    },
+    "hotSearch": {
+      "noMore": "[to be translated]:No more items",
+      "refresh": "[to be translated]:Refresh",
+      "tagHot": "[to be translated]:Hot",
+      "tagNew": "[to be translated]:New",
+      "title": "[to be translated]:Trending Searches"
+    },
+    "promotion": {
+      "subtitle": "[to be translated]:Master efficient usage tips",
+      "title": "[to be translated]:From Beginner to Expert",
+      "viewMore": "[to be translated]:View More"
+    },
+    "stats": {
+      "courses": "[to be translated]: courses",
+      "documents": "[to be translated]: documents",
+      "views": "[to be translated]: views"
+    },
+    "tabs": {
+      "courses": "[to be translated]:Featured Courses",
+      "documents": "[to be translated]:Featured Documents"
+    },
+    "title": "[to be translated]:Learning Center"
+  },
   "lmstudio": {
     "keep_alive_time": {
       "description": "Timpul în minute pentru a menține conexiunea activă; implicit este 5 minute.",
@@ -2900,6 +2930,217 @@
     "uninstall": "Dezinstalează",
     "uninstall_package": "Dezinstalează pachetul",
     "uninstalling": "Se dezinstalează..."
+  },
+  "presentations": {
+    "create": {
+      "content_hint": "[to be translated]:Provide your content based on the selected type",
+      "content_label": "[to be translated]:Content",
+      "next": "[to be translated]:Next",
+      "prev": "[to be translated]:Previous",
+      "step": {
+        "basic": "[to be translated]:Basic Info",
+        "settings": "[to be translated]:Settings",
+        "template": "[to be translated]:Template"
+      },
+      "submit": "[to be translated]:Create",
+      "template_hint": "[to be translated]:Select a template for your presentation",
+      "template_label": "[to be translated]:Template",
+      "title": "[to be translated]:Create Presentation",
+      "title_label": "[to be translated]:Title",
+      "title_placeholder": "[to be translated]:Enter presentation title",
+      "type": {
+        "description": "[to be translated]:From Description",
+        "description_desc": "[to be translated]:Provide complete page descriptions to generate slides",
+        "description_placeholder": "[to be translated]:Enter detailed descriptions for each slide...",
+        "idea": "[to be translated]:From Idea",
+        "idea_desc": "[to be translated]:Describe your idea and AI will generate the full presentation",
+        "idea_placeholder": "[to be translated]:Enter your presentation idea...",
+        "outline": "[to be translated]:From Outline",
+        "outline_desc": "[to be translated]:Provide a structured outline to generate slides",
+        "outline_placeholder": "[to be translated]:Enter your presentation outline..."
+      },
+      "type_label": "[to be translated]:Creation Type"
+    },
+    "description": {
+      "ai_refine": "[to be translated]:AI Refine",
+      "completed": "[to be translated]:Completed",
+      "generate_all": "[to be translated]:Generate All Descriptions",
+      "has_description": "[to be translated]:Has Description",
+      "has_prompt": "[to be translated]:Has Image Prompt",
+      "image_prompt_label": "[to be translated]:Image Prompt",
+      "image_prompt_placeholder": "[to be translated]:Describe the image to generate for this slide...",
+      "layout": {
+        "comparison": "[to be translated]:Comparison",
+        "image_full": "[to be translated]:Full Image",
+        "title_content": "[to be translated]:Title + Content",
+        "title_image": "[to be translated]:Title + Image",
+        "title_only": "[to be translated]:Title Only",
+        "two_column": "[to be translated]:Two Columns"
+      },
+      "layout_label": "[to be translated]:Layout",
+      "layout_placeholder": "[to be translated]:Select a layout",
+      "no_pages": "[to be translated]:No pages. Please generate an outline first.",
+      "refine_hint": "[to be translated]:Describe how you want to improve the descriptions",
+      "refine_modal_title": "[to be translated]:Refine Descriptions",
+      "refine_placeholder": "[to be translated]:e.g., Make them more concise and professional...",
+      "refine_tooltip": "[to be translated]:Use AI to refine descriptions",
+      "text_label": "[to be translated]:Content Text",
+      "text_placeholder": "[to be translated]:Enter the text content for this slide...",
+      "title": "[to be translated]:Descriptions"
+    },
+    "editor": {
+      "action_descriptions": "[to be translated]:Generate Descriptions",
+      "action_images": "[to be translated]:Generate Images",
+      "action_outline": "[to be translated]:Generate Outline",
+      "edit_image": "[to be translated]:Edit Image",
+      "edit_image_hint": "[to be translated]:Describe the changes you want to make to the image",
+      "edit_image_modal_title": "[to be translated]:Edit Image",
+      "edit_image_placeholder": "[to be translated]:e.g., Change the background to blue...",
+      "generate_image": "[to be translated]:Generate Image",
+      "loading": "[to be translated]:Loading presentation...",
+      "no_image": "[to be translated]:No image generated yet",
+      "not_found": "[to be translated]:Presentation not found",
+      "page_label": "[to be translated]:Page",
+      "regenerate_image": "[to be translated]:Regenerate Image",
+      "select_page": "[to be translated]:Select a page to edit",
+      "tab_description": "[to be translated]:Descriptions",
+      "tab_image": "[to be translated]:Image",
+      "tab_materials": "[to be translated]:Materials",
+      "tab_outline": "[to be translated]:Outline"
+    },
+    "export": {
+      "download": "[to be translated]:Download",
+      "format": {
+        "editable_pptx": "[to be translated]:Editable PPTX",
+        "editable_pptx_desc": "[to be translated]:Export as editable PowerPoint with text layers (OCR + Inpainting)",
+        "pdf": "[to be translated]:PDF",
+        "pdf_desc": "[to be translated]:Export as PDF document for sharing and printing",
+        "pptx": "[to be translated]:PPTX",
+        "pptx_desc": "[to be translated]:Export as PowerPoint presentation with images"
+      },
+      "processing": "[to be translated]:Processing export...",
+      "start": "[to be translated]:Start Export",
+      "title": "[to be translated]:Export"
+    },
+    "list": {
+      "create": "[to be translated]:New Presentation",
+      "create_first": "[to be translated]:Create your first presentation",
+      "delete_confirm": "[to be translated]:Are you sure you want to delete this presentation?",
+      "empty": "[to be translated]:No presentations yet",
+      "search_placeholder": "[to be translated]:Search presentations...",
+      "status": {
+        "completed": "[to be translated]:Completed",
+        "descriptions_ready": "[to be translated]:Descriptions Ready",
+        "draft": "[to be translated]:Draft",
+        "images_ready": "[to be translated]:Images Ready",
+        "outline_ready": "[to be translated]:Outline Ready"
+      },
+      "status_all": "[to be translated]:All",
+      "status_filter": "[to be translated]:Filter by status"
+    },
+    "material": {
+      "delete_confirm": "[to be translated]:Are you sure you want to delete this material?",
+      "empty": "[to be translated]:No materials uploaded yet",
+      "tab": "[to be translated]:Materials",
+      "upload": "[to be translated]:Upload Material"
+    },
+    "outline": {
+      "add_bullet": "[to be translated]:Add Bullet",
+      "add_page": "[to be translated]:Add Page",
+      "ai_refine": "[to be translated]:AI Refine",
+      "bullet_placeholder": "[to be translated]:Enter bullet point...",
+      "bullets": "[to be translated]:Bullet Points",
+      "delete_confirm": "[to be translated]:Are you sure you want to delete this page?",
+      "new_page_title": "[to be translated]:New Page",
+      "notes": "[to be translated]:Speaker Notes",
+      "notes_placeholder": "[to be translated]:Enter speaker notes...",
+      "pages": "[to be translated]:Pages",
+      "refine_hint": "[to be translated]:Describe how you want to improve the outline",
+      "refine_modal_title": "[to be translated]:Refine Outline",
+      "refine_placeholder": "[to be translated]:e.g., Make it more structured and add more detail...",
+      "title": "[to be translated]:Outline",
+      "title_placeholder": "[to be translated]:Enter page title..."
+    },
+    "preview": {
+      "has_description": "[to be translated]:Has Description",
+      "title": "[to be translated]:Preview"
+    },
+    "reference": {
+      "delete_confirm": "[to be translated]:Are you sure you want to delete this reference file?",
+      "empty": "[to be translated]:No reference files uploaded yet",
+      "status": {
+        "completed": "[to be translated]:Parsed",
+        "failed": "[to be translated]:Parse Failed",
+        "pending": "[to be translated]:Pending",
+        "processing": "[to be translated]:Parsing"
+      },
+      "tab": "[to be translated]:References",
+      "upload": "[to be translated]:Upload Reference"
+    },
+    "settings": {
+      "image_model": "[to be translated]:Image Model",
+      "image_model_hint": "[to be translated]:Model used for generating slide images",
+      "image_ratio": "[to be translated]:Image Ratio",
+      "image_style": {
+        "3d": "[to be translated]:3D Render",
+        "flat": "[to be translated]:Flat Design",
+        "illustration": "[to be translated]:Illustration",
+        "minimalist": "[to be translated]:Minimalist",
+        "realistic": "[to be translated]:Realistic",
+        "watercolor": "[to be translated]:Watercolor"
+      },
+      "image_style_label": "[to be translated]:Image Style",
+      "image_title": "[to be translated]:Image Settings",
+      "language": {
+        "en_us": "[to be translated]:English",
+        "ja_jp": "[to be translated]:Japanese",
+        "zh_cn": "[to be translated]:Chinese (Simplified)"
+      },
+      "language_label": "[to be translated]:Language",
+      "model_placeholder": "[to be translated]:Select a model",
+      "model_title": "[to be translated]:Model Settings",
+      "page_count": "[to be translated]:Number of Pages",
+      "text_model": "[to be translated]:Text Model",
+      "text_model_hint": "[to be translated]:Model used for generating outlines and descriptions",
+      "theme": {
+        "academic": "[to be translated]:Academic",
+        "business": "[to be translated]:Business",
+        "creative": "[to be translated]:Creative",
+        "minimal": "[to be translated]:Minimal",
+        "tech": "[to be translated]:Technology"
+      },
+      "theme_label": "[to be translated]:Theme",
+      "title": "[to be translated]:Settings"
+    },
+    "task": {
+      "active_tasks": "[to be translated]:Active Tasks",
+      "dismiss": "[to be translated]:Dismiss",
+      "edit_image": "[to be translated]:Editing Image",
+      "export_editable_pptx": "[to be translated]:Exporting Editable PPTX",
+      "export_pdf": "[to be translated]:Exporting PDF",
+      "export_pptx": "[to be translated]:Exporting PPTX",
+      "generate_descriptions": "[to be translated]:Generating Descriptions",
+      "generate_images": "[to be translated]:Generating Images",
+      "generate_outline": "[to be translated]:Generating Outline",
+      "generate_single_image": "[to be translated]:Generating Image",
+      "parse_reference_file": "[to be translated]:Parsing Reference File",
+      "refine_descriptions": "[to be translated]:Refining Descriptions",
+      "refine_outline": "[to be translated]:Refining Outline",
+      "status": {
+        "cancelled": "[to be translated]:Cancelled",
+        "completed": "[to be translated]:Completed",
+        "failed": "[to be translated]:Failed",
+        "pending": "[to be translated]:Pending",
+        "running": "[to be translated]:Running"
+      },
+      "unknown": "[to be translated]:Unknown Task"
+    },
+    "template": {
+      "empty": "[to be translated]:No templates available",
+      "loading": "[to be translated]:Loading templates...",
+      "no_desc": "[to be translated]:No description"
+    },
+    "title": "[to be translated]:Presentations"
   },
   "preview": {
     "copy": {
@@ -5380,6 +5621,7 @@
     "notes": "Notițe",
     "openclaw": "OpenClaw",
     "paintings": "Imagini",
+    "presentations": "[to be translated]:Presentations",
     "settings": "Setări",
     "store": "Bibliotecă asistenți",
     "translate": "Traducere"

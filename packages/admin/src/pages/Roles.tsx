@@ -76,6 +76,16 @@ const permissionCategories = [
       { value: 'write', label: '编辑' },
       { value: 'admin', label: '管理' }
     ]
+  },
+  {
+    key: 'presentations',
+    label: '演示文稿',
+    options: [
+      { value: 'read', label: '查看' },
+      { value: 'write', label: '编辑' },
+      { value: 'export', label: '导出' },
+      { value: 'admin', label: '管理' }
+    ]
   }
 ]
 

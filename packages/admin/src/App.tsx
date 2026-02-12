@@ -9,6 +9,7 @@ import KnowledgeBases from './pages/KnowledgeBases'
 import LearningCenter from './pages/LearningCenter'
 import Login from './pages/Login'
 import Models from './pages/Models'
+import Presentations from './pages/Presentations'
 import Roles from './pages/Roles'
 import Settings from './pages/Settings'
 import Statistics from './pages/Statistics'
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="statistics" element={<Statistics />} />
           <Route path="assistant-presets" element={<AssistantPresets />} />
           <Route path="learning-center" element={<LearningCenter />} />
+          <Route path="presentations" element={<Presentations />} />
           <Route path="backups" element={<Backups />} />
           <Route path="settings" element={<Settings />} />
         </Route>

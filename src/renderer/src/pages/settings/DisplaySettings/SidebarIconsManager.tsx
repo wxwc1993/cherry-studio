@@ -17,6 +17,7 @@ import {
   MessageSquareQuote,
   NotepadText,
   Palette,
+  Presentation,
   Sparkle
 } from 'lucide-react'
 import type { FC, ReactNode } from 'react'
@@ -127,7 +128,8 @@ const SidebarIconsManager: FC<SidebarIconsManagerProps> = ({
         notes: <NotepadText size={16} />,
         code_tools: <Code size={16} />,
         openclaw: <Bot size={16} />,
-        learning_center: <GraduationCap size={16} />
+        learning_center: <GraduationCap size={16} />,
+        presentations: <Presentation size={16} />
       }) satisfies Record<SidebarIcon, ReactNode>,
     []
   )

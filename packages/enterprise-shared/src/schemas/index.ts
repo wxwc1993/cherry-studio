@@ -9,6 +9,9 @@ export * from './fetch-models'
 // 导出学习中心 Schema
 export * from './learning-center'
 
+// 导出演示文稿 Schema
+export * from './presentation'
+
 // ============ 基础 Schema ============
 
 export const paginationParamsSchema = z.object({
@@ -76,7 +79,8 @@ export const rolePermissionsSchema = z.object({
   statistics: z.array(z.enum(['read', 'export'])).default([]),
   system: z.array(z.enum(['backup', 'restore', 'settings'])).default([]),
   assistantPresets: z.array(z.enum(['read', 'write', 'admin'])).default([]),
-  learningCenter: z.array(z.enum(['read', 'write', 'admin'])).default([])
+  learningCenter: z.array(z.enum(['read', 'write', 'admin'])).default([]),
+  presentations: z.array(z.enum(['read', 'write', 'export', 'admin'])).default([])
 })
 
 export const createRoleSchema = z.object({

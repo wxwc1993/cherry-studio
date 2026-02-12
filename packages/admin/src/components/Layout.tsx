@@ -4,6 +4,7 @@ import {
   BookOutlined,
   CloudOutlined,
   DashboardOutlined,
+  FilePptOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -82,6 +83,14 @@ export default function Layout() {
         key: '/learning-center',
         icon: <ReadOutlined />,
         label: '学习中心'
+      })
+    }
+
+    if (hasPermission('presentations', 'read')) {
+      items.push({
+        key: '/presentations',
+        icon: <FilePptOutlined />,
+        label: '演示文稿'
       })
     }
 

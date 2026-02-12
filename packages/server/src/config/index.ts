@@ -94,6 +94,15 @@ export const config = {
     format: optionalEnv('LOG_FORMAT', 'json')
   },
 
+  // Flask AI Worker 配置
+  flaskWorker: {
+    baseUrl: optionalEnv('FLASK_WORKER_URL', 'http://localhost:5000'),
+    timeoutMs: parseInt(optionalEnv('FLASK_WORKER_TIMEOUT_MS', '120000'), 10),
+    healthCheckPath: optionalEnv('FLASK_WORKER_HEALTH_PATH', '/health'),
+    maxRetries: parseInt(optionalEnv('FLASK_WORKER_MAX_RETRIES', '2'), 10),
+    retryDelayMs: parseInt(optionalEnv('FLASK_WORKER_RETRY_DELAY_MS', '1000'), 10)
+  },
+
   // 开发者登录配置 (仅开发环境)
   devLogin: {
     enabled: optionalEnv('NODE_ENV', 'development') === 'development',

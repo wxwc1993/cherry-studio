@@ -43,6 +43,7 @@ import ocr from './ocr'
 import openclaw from './openclaw'
 import paintings from './paintings'
 import preprocess from './preprocess'
+import presentations from './presentations'
 import runtime from './runtime'
 import selectionStore from './selectionStore'
 import settings from './settings'
@@ -81,15 +82,16 @@ const rootReducer = combineReducers({
   ocr,
   note,
   toolPermissions,
-  enterprise
+  enterprise,
+  presentations
 })
 
 const persistedReducer = persistReducer(
   {
     key: 'cherry-studio',
     storage,
-    version: 196,
-    blacklist: ['runtime', 'messages', 'messageBlocks', 'tabs', 'toolPermissions'],
+    version: 197,
+    blacklist: ['runtime', 'messages', 'messageBlocks', 'tabs', 'toolPermissions', 'presentations'],
     migrate
   },
   rootReducer

@@ -410,7 +410,12 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   lcCourses: many(lcCourses),
   lcDocumentCategories: many(lcDocumentCategories),
   lcDocuments: many(lcDocuments),
-  lcHotItems: many(lcHotItems)
+  lcHotItems: many(lcHotItems),
+  presentations: many(presentations),
+  presentationMaterials: many(presentationMaterials),
+  presentationReferenceFiles: many(presentationReferenceFiles),
+  presentationTemplates: many(presentationTemplates),
+  presentationSettings: many(presentationSettings)
 }))
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
@@ -447,7 +452,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [roles.id]
   }),
   conversations: many(conversations),
-  usageLogs: many(usageLogs)
+  usageLogs: many(usageLogs),
+  presentations: many(presentations),
+  presentationTasks: many(presentationTasks),
+  presentationMaterials: many(presentationMaterials),
+  presentationReferenceFiles: many(presentationReferenceFiles)
 }))
 
 export const modelsRelations = relations(models, ({ one, many }) => ({
@@ -887,6 +896,304 @@ export const lcDocumentsRelations = relations(lcDocuments, ({ one }) => ({
 export const lcHotItemsRelations = relations(lcHotItems, ({ one }) => ({
   company: one(companies, {
     fields: [lcHotItems.companyId],
+    references: [companies.id]
+  })
+}))
+
+// ============ 演示文稿 — 主表 ============
+
+export const presentations = pgTable(
+  'presentations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: varchar('title', { length: 300 }).notNull(),
+    creationType: varchar('creation_type', { length: 20 }).notNull().default('idea'),
+    status: varchar('status', { length: 30 }).notNull().default('draft'),
+    config: jsonb('config').notNull().default({}),
+    pageCount: integer('page_count').notNull().default(0),
+    sourceContent: text('source_content'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('presentations_company_id_idx').on(table.companyId),
+    index('presentations_user_id_idx').on(table.userId),
+    index('presentations_company_user_idx').on(table.companyId, table.userId),
+    index('presentations_status_idx').on(table.status)
+  ]
+)
+
+// ============ 演示文稿 — 页面表 ============
+
+export const presentationPages = pgTable(
+  'presentation_pages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    presentationId: uuid('presentation_id')
+      .notNull()
+      .references(() => presentations.id, { onDelete: 'cascade' }),
+    orderIndex: integer('order_index').notNull().default(0),
+    outlineContent: jsonb('outline_content').notNull().default({}),
+    descriptionContent: jsonb('description_content'),
+    generatedImageKey: text('generated_image_key'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('presentation_pages_presentation_id_idx').on(table.presentationId),
+    index('presentation_pages_order_idx').on(table.presentationId, table.orderIndex)
+  ]
+)
+
+// ============ 演示文稿 — 图像版本表 ============
+
+export const presentationImageVersions = pgTable(
+  'presentation_image_versions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pageId: uuid('page_id')
+      .notNull()
+      .references(() => presentationPages.id, { onDelete: 'cascade' }),
+    imageKey: text('image_key').notNull(),
+    versionNumber: integer('version_number').notNull().default(1),
+    isCurrent: boolean('is_current').notNull().default(true),
+    prompt: text('prompt'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('presentation_image_versions_page_id_idx').on(table.pageId),
+    index('presentation_image_versions_current_idx').on(table.pageId, table.isCurrent)
+  ]
+)
+
+// ============ 演示文稿 — 任务表 ============
+
+export const presentationTasks = pgTable(
+  'presentation_tasks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    presentationId: uuid('presentation_id')
+      .notNull()
+      .references(() => presentations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    taskType: varchar('task_type', { length: 30 }).notNull(),
+    status: varchar('status', { length: 20 }).notNull().default('pending'),
+    progress: jsonb('progress').notNull().default({}),
+    bullmqJobId: varchar('bullmq_job_id', { length: 200 }),
+    result: jsonb('result'),
+    errorMessage: text('error_message'),
+    startedAt: timestamp('started_at'),
+    completedAt: timestamp('completed_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('presentation_tasks_presentation_id_idx').on(table.presentationId),
+    index('presentation_tasks_user_id_idx').on(table.userId),
+    index('presentation_tasks_status_idx').on(table.status),
+    index('presentation_tasks_bullmq_job_id_idx').on(table.bullmqJobId)
+  ]
+)
+
+// ============ 演示文稿 — 素材表 ============
+
+export const presentationMaterials = pgTable(
+  'presentation_materials',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    presentationId: uuid('presentation_id').references(() => presentations.id, { onDelete: 'set null' }),
+    fileName: varchar('file_name', { length: 255 }).notNull(),
+    storageKey: text('storage_key').notNull(),
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+    mimeType: varchar('mime_type', { length: 100 }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('presentation_materials_company_id_idx').on(table.companyId),
+    index('presentation_materials_user_id_idx').on(table.userId),
+    index('presentation_materials_presentation_id_idx').on(table.presentationId)
+  ]
+)
+
+// ============ 演示文稿 — 参考文件表 ============
+
+export const presentationReferenceFiles = pgTable(
+  'presentation_reference_files',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    presentationId: uuid('presentation_id')
+      .notNull()
+      .references(() => presentations.id, { onDelete: 'cascade' }),
+    fileName: varchar('file_name', { length: 255 }).notNull(),
+    storageKey: text('storage_key').notNull(),
+    markdownContent: text('markdown_content'),
+    parseStatus: varchar('parse_status', { length: 20 }).notNull().default('pending'),
+    fileSize: bigint('file_size', { mode: 'number' }).notNull(),
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('presentation_reference_files_company_id_idx').on(table.companyId),
+    index('presentation_reference_files_presentation_id_idx').on(table.presentationId),
+    index('presentation_reference_files_parse_status_idx').on(table.parseStatus)
+  ]
+)
+
+// ============ 演示文稿 — 模板表 ============
+
+export const presentationTemplates = pgTable(
+  'presentation_templates',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' }),
+    uploaderId: uuid('uploader_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 200 }).notNull(),
+    description: text('description'),
+    storageKey: text('storage_key').notNull(),
+    previewImageKey: text('preview_image_key'),
+    isPublic: boolean('is_public').notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [
+    index('presentation_templates_company_id_idx').on(table.companyId),
+    index('presentation_templates_company_public_idx').on(table.companyId, table.isPublic)
+  ]
+)
+
+// ============ 演示文稿 — 企业设置表 ============
+
+export const presentationSettings = pgTable(
+  'presentation_settings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    companyId: uuid('company_id')
+      .notNull()
+      .references(() => companies.id, { onDelete: 'cascade' })
+      .unique(),
+    defaultTextModelId: uuid('default_text_model_id'),
+    defaultImageModelId: uuid('default_image_model_id'),
+    config: jsonb('config').notNull().default({}),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+  },
+  (table) => [index('presentation_settings_company_id_idx').on(table.companyId)]
+)
+
+// ============ 演示文稿 — Relations ============
+
+export const presentationsRelations = relations(presentations, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [presentations.companyId],
+    references: [companies.id]
+  }),
+  user: one(users, {
+    fields: [presentations.userId],
+    references: [users.id]
+  }),
+  pages: many(presentationPages),
+  tasks: many(presentationTasks),
+  materials: many(presentationMaterials),
+  referenceFiles: many(presentationReferenceFiles)
+}))
+
+export const presentationPagesRelations = relations(presentationPages, ({ one, many }) => ({
+  presentation: one(presentations, {
+    fields: [presentationPages.presentationId],
+    references: [presentations.id]
+  }),
+  imageVersions: many(presentationImageVersions)
+}))
+
+export const presentationImageVersionsRelations = relations(presentationImageVersions, ({ one }) => ({
+  page: one(presentationPages, {
+    fields: [presentationImageVersions.pageId],
+    references: [presentationPages.id]
+  })
+}))
+
+export const presentationTasksRelations = relations(presentationTasks, ({ one }) => ({
+  presentation: one(presentations, {
+    fields: [presentationTasks.presentationId],
+    references: [presentations.id]
+  }),
+  user: one(users, {
+    fields: [presentationTasks.userId],
+    references: [users.id]
+  })
+}))
+
+export const presentationMaterialsRelations = relations(presentationMaterials, ({ one }) => ({
+  company: one(companies, {
+    fields: [presentationMaterials.companyId],
+    references: [companies.id]
+  }),
+  user: one(users, {
+    fields: [presentationMaterials.userId],
+    references: [users.id]
+  }),
+  presentation: one(presentations, {
+    fields: [presentationMaterials.presentationId],
+    references: [presentations.id]
+  })
+}))
+
+export const presentationReferenceFilesRelations = relations(presentationReferenceFiles, ({ one }) => ({
+  company: one(companies, {
+    fields: [presentationReferenceFiles.companyId],
+    references: [companies.id]
+  }),
+  user: one(users, {
+    fields: [presentationReferenceFiles.userId],
+    references: [users.id]
+  }),
+  presentation: one(presentations, {
+    fields: [presentationReferenceFiles.presentationId],
+    references: [presentations.id]
+  })
+}))
+
+export const presentationTemplatesRelations = relations(presentationTemplates, ({ one }) => ({
+  company: one(companies, {
+    fields: [presentationTemplates.companyId],
+    references: [companies.id]
+  }),
+  uploader: one(users, {
+    fields: [presentationTemplates.uploaderId],
+    references: [users.id]
+  })
+}))
+
+export const presentationSettingsRelations = relations(presentationSettings, ({ one }) => ({
+  company: one(companies, {
+    fields: [presentationSettings.companyId],
     references: [companies.id]
   })
 }))

@@ -9,6 +9,7 @@ import departmentRoutes from './departments'
 import knowledgeBaseRoutes from './knowledge-bases'
 import learningCenterRoutes from './learning-center'
 import modelRoutes from './models'
+import presentationRoutes from './presentations'
 import roleRoutes from './roles'
 import statisticsRoutes from './statistics'
 import userRoutes from './users'
@@ -27,5 +28,6 @@ router.use('/admin', adminRoutes)
 router.use('/assistant-presets', assistantPresetRoutes)
 router.use('/settings', clientSettingsRoutes)
 router.use('/learning-center', learningCenterRoutes)
+router.use('/presentations', presentationRoutes)
 
 export default router

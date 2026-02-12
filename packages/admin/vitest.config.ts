@@ -1,8 +1,16 @@
 import react from '@vitejs/plugin-react'
+import path from 'path'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@provider-logos': path.resolve(__dirname, '../../src/renderer/src/assets/images/providers'),
+      '@model-logos': path.resolve(__dirname, '../../src/renderer/src/assets/images/models')
+    }
+  },
   test: {
     globals: true,
     environment: 'jsdom',
