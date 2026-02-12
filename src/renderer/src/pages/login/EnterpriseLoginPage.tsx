@@ -30,10 +30,18 @@ export default function EnterpriseLoginPage() {
   // 用于取消轮询的 ref
   const pollingRef = useRef(false)
 
-  // 组件卸载时取消轮询，防止内存泄漏和状态更新
+  // 飞书授权窗口引用，用于登录成功后关闭窗口
+  const feishuWindowRef = useRef<Window | null>(null)
+
+  // 组件卸载时取消轮询，关闭授权窗口，防止内存泄漏和状态更新
   useEffect(() => {
     return () => {
       pollingRef.current = false
+      // 尝试关闭飞书授权窗口
+      if (feishuWindowRef.current) {
+        feishuWindowRef.current.close()
+        feishuWindowRef.current = null
+      }
     }
   }, [])
 
@@ -61,6 +69,11 @@ export default function EnterpriseLoginPage() {
 
           if (data.status === 'success' && data.user && data.accessToken && data.refreshToken) {
             pollingRef.current = false
+            // 关闭飞书授权窗口
+            if (feishuWindowRef.current) {
+              feishuWindowRef.current.close()
+              feishuWindowRef.current = null
+            }
             setAuth(data.user, data.accessToken, data.refreshToken)
             navigate('/')
             return
@@ -110,8 +123,8 @@ export default function EnterpriseLoginPage() {
     // 使用企业服务器地址作为 redirect_uri
     const redirectUri = encodeURIComponent(`${config.serverUrl}/api/v1/auth/feishu/callback`)
 
-    // 用新窗口打开飞书授权页
-    window.open(
+    // 用新窗口打开飞书授权页，保存窗口引用用于登录成功后关闭
+    feishuWindowRef.current = window.open(
       `https://open.feishu.cn/open-apis/authen/v1/authorize?app_id=${feishuAppId}&redirect_uri=${redirectUri}&state=${sessionId}&response_type=code`,
       'feishu-oauth',
       'width=720,height=720'
